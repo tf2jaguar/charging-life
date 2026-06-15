@@ -269,3 +269,71 @@
   font-weight: 500;
   display: block;
 }
+
+/* ========== Skeleton 骨架屏 ========== */
+.skeleton-line {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 8rpx;
+}
+
+.skeleton-line-stats-value {
+  width: 80rpx;
+  height: 40rpx;
+  margin: 0 auto 8rpx;
+}
+
+.skeleton-line-stats-label {
+  width: 120rpx;
+  height: 22rpx;
+  margin: 0 auto;
+}
+
+.skeleton-line-vehicle-name {
+  width: 180rpx;
+  height: 28rpx;
+  margin-bottom: 8rpx;
+}
+
+.skeleton-line-vehicle-trim {
+  width: 200rpx;
+  height: 20rpx;
+}
+
+.skeleton-circle {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-circle-vehicle {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+}
+
+.skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.skeleton-vehicle-item {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 32rpx;
+  border-bottom: 2rpx solid #f1f5f9;
+}
+
+.skeleton-vehicle-item:last-child {
+  border-bottom: none;
+}
+
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

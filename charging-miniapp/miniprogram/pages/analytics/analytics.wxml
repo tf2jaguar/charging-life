@@ -9,8 +9,18 @@
       data-index="{{1}}" bindtap="onPeriodChange">本年</view>
   </view>
 
-  <!-- 核心指标 -->
-  <view class="core-stats glass-card" wx:if="{{coreStats}}">
+  <!-- 核心指标 - 加载态 -->
+  <view class="core-stats glass-card" wx:if="{{coreLoading}}">
+    <text class="card-title">核心指标</text>
+    <view class="core-grid">
+      <view class="core-item" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-line skeleton-line-value-xl"></view>
+        <view class="skeleton-line skeleton-line-text-sm"></view>
+      </view>
+    </view>
+  </view>
+  <!-- 核心指标 - 数据态 -->
+  <view class="core-stats glass-card" wx:elif="{{coreStats}}">
     <text class="card-title">核心指标</text>
     <view class="core-grid">
       <view class="core-item">
@@ -28,8 +38,22 @@
     </view>
   </view>
 
-  <!-- 月度趋势 -->
-  <view class="trend-card glass-card" wx:if="{{trend.length}}">
+  <!-- 月度趋势 - 加载态 -->
+  <view class="trend-card glass-card" wx:if="{{trendLoading}}">
+    <view class="card-header">
+      <text class="card-title">月度充电趋势</text>
+    </view>
+    <view class="skeleton-bar-chart">
+      <view class="skeleton-bar-group" wx:for="{{[1,2,3,4,5,6,7,8,9,10,11,12]}}" wx:key="*this">
+        <view class="skeleton-bar-pair">
+          <view class="skeleton-bar" style="height: {{(60 + item * 15) % 80 + 20}}%"></view>
+          <view class="skeleton-bar" style="height: {{(40 + item * 20) % 70 + 15}}%"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 月度趋势 - 数据态 -->
+  <view class="trend-card glass-card" wx:elif="{{trend.length}}">
     <view class="card-header">
       <text class="card-title">月度充电趋势</text>
       <view class="legend-row">
@@ -54,8 +78,20 @@
     </view>
   </view>
 
-  <!-- 充电时段分布 -->
-  <view class="glass-card" wx:if="{{timeDist.length}}">
+  <!-- 充电时段分布 - 加载态 -->
+  <view class="glass-card" wx:if="{{timeDistLoading}}">
+    <view class="card-title" style="padding: 32rpx 32rpx 0;">充电时段分布</view>
+    <view class="skeleton-time-dist">
+      <view class="skeleton-time-slot" wx:for="{{[1,2,3,4,5]}}" wx:key="*this">
+        <view class="skeleton-time-bar-bg">
+          <view class="skeleton-bar" style="height: {{(30 + item * 18) % 70 + 20}}%"></view>
+        </view>
+        <view class="skeleton-line skeleton-line-text-xs"></view>
+      </view>
+    </view>
+  </view>
+  <!-- 充电时段分布 - 数据态 -->
+  <view class="glass-card" wx:elif="{{timeDist.length}}">
     <view class="card-title" style="padding: 32rpx 32rpx 0;">充电时段分布</view>
     <view class="time-dist">
       <view wx:for="{{timeDist}}" wx:key="label" class="time-slot">
@@ -68,8 +104,23 @@
     </view>
   </view>
 
-  <!-- 充电类型占比 -->
-  <view class="glass-card" wx:if="{{typeDist}}">
+  <!-- 充电类型占比 - 加载态 -->
+  <view class="glass-card" wx:if="{{typeDistLoading}}">
+    <view class="card-title" style="padding: 32rpx 32rpx 0;">充电类型占比</view>
+    <view class="type-dist">
+      <view class="skeleton-pie"></view>
+      <view class="skeleton-type-legend">
+        <view class="skeleton-legend-item" wx:for="{{[1,2,3]}}" wx:key="*this">
+          <view class="skeleton-line skeleton-line-dot"></view>
+          <view class="skeleton-lines">
+            <view class="skeleton-line skeleton-line-text-md"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 充电类型占比 - 数据态 -->
+  <view class="glass-card" wx:elif="{{typeDist}}">
     <view class="card-title" style="padding: 32rpx 32rpx 0;">充电类型占比</view>
     <view class="type-dist">
       <view class="pie-area">
@@ -101,8 +152,18 @@
     </view>
   </view>
 
-  <!-- 效率统计 -->
-  <view class="glass-card" wx:if="{{coreStats}}">
+  <!-- 效率统计 - 加载态 -->
+  <view class="glass-card" wx:if="{{coreLoading}}">
+    <view class="card-title" style="padding: 32rpx 32rpx 0;">效率统计</view>
+    <view class="efficiency-grid">
+      <view class="eff-box" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-line skeleton-line-value-lg" style="margin: 0 auto 8rpx;"></view>
+        <view class="skeleton-line skeleton-line-text-sm" style="margin: 0 auto;"></view>
+      </view>
+    </view>
+  </view>
+  <!-- 效率统计 - 数据态 -->
+  <view class="glass-card" wx:elif="{{coreStats}}">
     <view class="card-title" style="padding: 32rpx 32rpx 0;">效率统计</view>
     <view class="efficiency-grid">
       <view class="eff-box" style="background: rgba(8,145,178,0.05);">
@@ -120,8 +181,21 @@
     </view>
   </view>
 
-  <!-- 充电站排行 -->
-  <view class="glass-card" wx:if="{{topStations.length}}">
+  <!-- 充电站排行 - 加载态 -->
+  <view class="glass-card" wx:if="{{stationLoading}}">
+    <view class="card-title" style="padding: 32rpx 32rpx 0;">常用充电站</view>
+    <view class="station-rank">
+      <view class="skeleton-rank-item" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-line skeleton-line-rank"></view>
+        <view class="skeleton-lines">
+          <view class="skeleton-line skeleton-line-text-md"></view>
+          <view class="skeleton-line skeleton-line-text-xs"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 充电站排行 - 数据态 -->
+  <view class="glass-card" wx:elif="{{topStations.length}}">
     <view class="card-title" style="padding: 32rpx 32rpx 0;">常用充电站</view>
     <view class="station-rank">
       <view wx:for="{{topStations}}" wx:key="name" class="rank-item">

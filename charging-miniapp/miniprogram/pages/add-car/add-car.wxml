@@ -5,12 +5,15 @@
       <text class="form-icon">🏷</text>
       <text>品牌</text>
     </view>
-    <picker range="{{brands}}" value="{{brandIndex}}" bindchange="onBrandChange">
+    <picker wx:if="{{!catalogLoading}}" range="{{brandNames}}" value="{{brandIndex}}" bindchange="onBrandChange">
       <view class="input-field picker-field">
-        <text wx:if="{{brandIndex >= 0}}">{{brands[brandIndex]}}</text>
+        <text wx:if="{{brandIndex >= 0}}">{{brandNames[brandIndex]}}</text>
         <text wx:else class="placeholder">请选择品牌</text>
       </view>
     </picker>
+    <view wx:else class="input-field picker-field">
+      <view class="skeleton-line skeleton-line-picker"></view>
+    </view>
   </view>
 
   <!-- 型号 -->
@@ -19,12 +22,18 @@
       <text class="form-icon">💻</text>
       <text>型号</text>
     </view>
-    <picker range="{{models}}" value="{{modelIndex}}" bindchange="onModelChange" disabled="{{brandIndex < 0}}">
+    <picker range="{{modelNames}}" value="{{modelIndex}}" bindchange="onModelChange" disabled="{{brandIndex < 0}}">
       <view class="input-field picker-field {{brandIndex < 0 ? 'input-disabled' : ''}}">
-        <text wx:if="{{modelIndex >= 0}}">{{models[modelIndex]}}</text>
+        <text wx:if="{{modelIndex >= 0}}">{{modelNames[modelIndex]}}</text>
         <text wx:else class="placeholder">{{brandIndex < 0 ? '请先选择品牌' : '请选择型号'}}</text>
       </view>
     </picker>
+    <!-- 型号信息 -->
+    <view class="model-info" wx:if="{{currentModelInfo}}">
+      <text class="model-tag model-tag-energy">{{currentModelInfo.energy_type === 'BEV' ? '纯电' : currentModelInfo.energy_type === 'REEV' ? '增程' : currentModelInfo.energy_type === 'PHEV' ? '插混' : currentModelInfo.energy_type}}</text>
+      <text class="model-tag model-tag-type">{{currentModelInfo.vehicle_type}}</text>
+      <text class="model-price">{{currentModelInfo.price_range}}</text>
+    </view>
   </view>
 
   <!-- 款式 -->
@@ -33,9 +42,9 @@
       <text class="form-icon">📦</text>
       <text>款式</text>
     </view>
-    <picker range="{{trims}}" value="{{trimIndex}}" bindchange="onTrimChange" disabled="{{modelIndex < 0}}">
+    <picker range="{{styleNames}}" value="{{styleIndex}}" bindchange="onStyleChange" disabled="{{modelIndex < 0}}">
       <view class="input-field picker-field {{modelIndex < 0 ? 'input-disabled' : ''}}">
-        <text wx:if="{{trimIndex >= 0}}">{{trims[trimIndex]}}</text>
+        <text wx:if="{{styleIndex >= 0}}">{{styleNames[styleIndex]}}</text>
         <text wx:else class="placeholder">{{modelIndex < 0 ? '请先选择型号' : '请选择款式'}}</text>
       </view>
     </picker>
@@ -47,10 +56,10 @@
       <text class="form-icon">⚡</text>
       <text>电池容量</text>
     </view>
-    <picker range="{{batteryOptions}}" value="{{batteryIndex}}" bindchange="onBatteryChange" disabled="{{trimIndex < 0}}">
-      <view class="input-field picker-field {{trimIndex < 0 ? 'input-disabled' : ''}}">
+    <picker range="{{batteryOptions}}" value="{{batteryIndex}}" bindchange="onBatteryChange" disabled="{{styleIndex < 0}}">
+      <view class="input-field picker-field {{styleIndex < 0 ? 'input-disabled' : ''}}">
         <text wx:if="{{batteryIndex >= 0}}">{{batteryOptions[batteryIndex]}}</text>
-        <text wx:else class="placeholder">{{trimIndex < 0 ? '请先选择款式' : '请选择容量'}}</text>
+        <text wx:else class="placeholder">{{styleIndex < 0 ? '请先选择款式' : '请选择容量'}}</text>
       </view>
     </picker>
     <text class="hint-text" wx:if="{{batteryHint}}">根据款式自动匹配，也可手动修改</text>

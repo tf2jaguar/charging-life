@@ -20,8 +20,18 @@
       </view>
     </view>
 
-    <!-- 车辆信息卡 -->
-    <view class="vehicle-card glass-card" bindtap="onVehicleCardTap" wx:if="{{defaultVehicle}}">
+    <!-- 车辆信息卡 - 加载态 -->
+    <view class="vehicle-card glass-card vehicle-card-skeleton" wx:if="{{headerLoading}}">
+      <view class="vehicle-content">
+        <view class="skeleton-circle"></view>
+        <view class="skeleton-lines">
+          <view class="skeleton-line skeleton-line-long"></view>
+          <view class="skeleton-line skeleton-line-short"></view>
+        </view>
+      </view>
+    </view>
+    <!-- 车辆信息卡 - 数据态 -->
+    <view class="vehicle-card glass-card" bindtap="onVehicleCardTap" wx:elif="{{defaultVehicle}}">
       <view class="vehicle-content">
         <view class="vehicle-icon"><image class="vehicle-icon-img" src="/assets/icons/car-blue.svg" mode="aspectFit" /></view>
         <view class="vehicle-info">
@@ -64,8 +74,19 @@
     </view>
   </view>
 
-  <!-- 本月概览 -->
-  <view class="overview-section">
+  <!-- 本月概览 - 加载态 -->
+  <view class="overview-section" wx:if="{{overviewLoading}}">
+    <text class="section-title">本月概览</text>
+    <view class="overview-grid">
+      <view class="skeleton-card" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
+        <view class="skeleton-line skeleton-line-icon"></view>
+        <view class="skeleton-line skeleton-line-value"></view>
+        <view class="skeleton-line skeleton-line-label"></view>
+      </view>
+    </view>
+  </view>
+  <!-- 本月概览 - 数据态 -->
+  <view class="overview-section" wx:else>
     <text class="section-title">本月概览</text>
     <view class="overview-grid">
       <stat-card
@@ -128,8 +149,19 @@
     </view>
   </view>
 
-  <!-- 充电日历 -->
-  <view class="calendar-section">
+  <!-- 充电日历 - 加载态 -->
+  <view class="calendar-section" wx:if="{{calendarLoading}}">
+    <view class="calendar-card glass-card skeleton-calendar">
+      <view class="skeleton-calendar-header">
+        <view class="skeleton-line skeleton-line-month"></view>
+      </view>
+      <view class="skeleton-calendar-grid">
+        <view class="skeleton-cell" wx:for="{{[1,2,3,4,5,6,7,8,9,10,11,12,13,14]}}" wx:key="*this"></view>
+      </view>
+    </view>
+  </view>
+  <!-- 充电日历 - 数据态 -->
+  <view class="calendar-section" wx:else>
     <view class="calendar-card glass-card">
       <calendar
         chargedDays="{{calendarDays}}"
@@ -141,8 +173,25 @@
     </view>
   </view>
 
-  <!-- 最近充电 -->
-  <view class="recent-section" wx:if="{{recentRecords.length}}">
+  <!-- 最近充电 - 加载态 -->
+  <view class="recent-section" wx:if="{{recentLoading}}">
+    <view class="recent-header">
+      <text class="section-title">最近充电</text>
+    </view>
+    <view class="recent-list">
+      <view class="recent-item glass-card skeleton-recent" wx:for="{{[1,2]}}" wx:key="*this">
+        <view class="recent-item-left">
+          <view class="skeleton-circle skeleton-circle-sm"></view>
+          <view class="skeleton-lines">
+            <view class="skeleton-line skeleton-line-long"></view>
+            <view class="skeleton-line skeleton-line-short"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 最近充电 - 数据态 -->
+  <view class="recent-section" wx:elif="{{recentRecords.length}}">
     <view class="recent-header">
       <text class="section-title">最近充电</text>
       <text class="recent-more" bindtap="goToHistory">全部记录 ›</text>

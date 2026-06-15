@@ -19,6 +19,8 @@ Page({
     },
     showAuthPopup: false,
     statusBarHeight: 0,
+    statsLoading: true,
+    vehicleLoading: true,
     _tapCountMap: {},
   },
 
@@ -35,42 +37,57 @@ Page({
   },
 
   async loadData() {
-    try {
-      await auth.initOpenId()
-      const userInfo = auth.getUserInfo()
-      const loggedIn = auth.isLoggedIn()
+    this.setData({ statsLoading: true, vehicleLoading: true })
 
-      if (loggedIn) {
-        const vehicleId = app.getCurrentVehicleId()
-        const [vehicles, statsRes] = await Promise.all([
-          callCloud('vehicle', { action: 'list' }),
-          callCloud('stats', { action: 'overview', filter: 'all', vehicleId }),
-        ])
+    // auth 已登录则跳过
+    if (!auth.isLoggedIn()) {
+      try { await auth.initOpenId() } catch (e) { /* ignore */ }
+    }
 
+    const loggedIn = auth.isLoggedIn()
+    const userInfo = auth.getUserInfo()
+
+    if (!loggedIn) {
+      this.setData({
+        isLoggedIn: false, nickName: '', userInfo: null,
+        vehicles: [], totalKwh: '-', totalCost: '-', totalDays: '-',
+        statsLoading: false, vehicleLoading: false,
+      })
+      return
+    }
+
+    this.setData({
+      userInfo,
+      isLoggedIn: true,
+      nickName: userInfo ? userInfo.nickName || '' : '',
+      settings: userInfo && userInfo.settings ? userInfo.settings : this.data.settings,
+    })
+
+    const vehicleId = app.getCurrentVehicleId()
+
+    // 并行加载车辆和统计数据，各自独立渲染
+    const loadVehicles = callCloud('vehicle', { action: 'list' })
+      .then(vehicles => {
+        this.setData({ vehicles: vehicles || [], vehicleLoading: false })
+      }).catch(err => {
+        console.error('load vehicles error', err)
+        this.setData({ vehicleLoading: false })
+      })
+
+    const loadStats = callCloud('stats', { action: 'overview', filter: 'all', vehicleId })
+      .then(statsRes => {
         this.setData({
-          userInfo,
-          isLoggedIn: true,
-          nickName: userInfo ? userInfo.nickName || '' : '',
-          vehicles: vehicles || [],
           totalKwh: statsRes && statsRes.kwh ? toFixed(statsRes.kwh.value, 1) : '-',
           totalCost: statsRes && statsRes.cost ? '¥' + toFixed(statsRes.cost.value) : '-',
           totalDays: statsRes && statsRes.days && statsRes.days.value > 0 ? statsRes.days.value : '-',
-          settings: userInfo && userInfo.settings ? userInfo.settings : this.data.settings,
+          statsLoading: false,
         })
-      } else {
-        this.setData({
-          userInfo: null,
-          isLoggedIn: false,
-          nickName: '',
-          vehicles: [],
-          totalKwh: '-',
-          totalCost: '-',
-          totalDays: '-',
-        })
-      }
-    } catch (err) {
-      console.error(err)
-    }
+      }).catch(err => {
+        console.error('load stats error', err)
+        this.setData({ statsLoading: false })
+      })
+
+    await Promise.all([loadVehicles, loadStats])
   },
 
   goToAddCar() {

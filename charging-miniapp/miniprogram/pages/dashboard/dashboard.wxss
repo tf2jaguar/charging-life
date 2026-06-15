@@ -424,3 +424,118 @@
   font-weight: 600;
   flex-shrink: 0;
 }
+
+/* ========== Skeleton 骨架屏 ========== */
+.skeleton-line {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 8rpx;
+  height: 24rpx;
+}
+
+.skeleton-line-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.skeleton-line-value {
+  width: 80rpx;
+  height: 32rpx;
+  margin-bottom: 12rpx;
+}
+
+.skeleton-line-label {
+  width: 120rpx;
+  height: 20rpx;
+}
+
+.skeleton-line-long {
+  width: 200rpx;
+  height: 28rpx;
+  margin-bottom: 8rpx;
+}
+
+.skeleton-line-short {
+  width: 140rpx;
+  height: 20rpx;
+}
+
+.skeleton-line-month {
+  width: 160rpx;
+  height: 28rpx;
+}
+
+.skeleton-circle {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-circle-sm {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+}
+
+.skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.skeleton-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: var(--card-radius-sm);
+  padding: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vehicle-card-skeleton .vehicle-content {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.skeleton-recent .recent-item-left {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.skeleton-calendar {
+  padding: 32rpx;
+}
+
+.skeleton-calendar-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32rpx;
+}
+
+.skeleton-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16rpx;
+}
+
+.skeleton-cell {
+  height: 64rpx;
+  border-radius: 8rpx;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

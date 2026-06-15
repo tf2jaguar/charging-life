@@ -67,3 +67,51 @@
   color: #0891B2;
   font-weight: 500;
 }
+
+/* 型号信息标签 */
+.model-info {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.model-tag {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-weight: 500;
+}
+
+.model-tag-energy {
+  background: rgba(8, 145, 178, 0.1);
+  color: #0891B2;
+}
+
+.model-tag-type {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+.model-price {
+  font-size: 22rpx;
+  color: #94A3B8;
+}
+
+/* Skeleton */
+.skeleton-line {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 8rpx;
+}
+
+.skeleton-line-picker {
+  width: 160rpx;
+  height: 28rpx;
+}
+
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

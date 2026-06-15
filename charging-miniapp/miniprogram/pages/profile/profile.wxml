@@ -24,8 +24,27 @@
       </view>
     </view>
 
-    <!-- 统计卡 -->
-    <view class="stats-card glass-card">
+    <!-- 统计卡 - 加载态 -->
+    <view class="stats-card glass-card" wx:if="{{statsLoading && isLoggedIn}}">
+      <view class="stats-grid">
+        <view class="stats-item">
+          <view class="skeleton-line skeleton-line-stats-value"></view>
+          <view class="skeleton-line skeleton-line-stats-label"></view>
+        </view>
+        <view class="stats-divider"></view>
+        <view class="stats-item">
+          <view class="skeleton-line skeleton-line-stats-value"></view>
+          <view class="skeleton-line skeleton-line-stats-label"></view>
+        </view>
+        <view class="stats-divider"></view>
+        <view class="stats-item">
+          <view class="skeleton-line skeleton-line-stats-value"></view>
+          <view class="skeleton-line skeleton-line-stats-label"></view>
+        </view>
+      </view>
+    </view>
+    <!-- 统计卡 - 数据态 -->
+    <view class="stats-card glass-card" wx:elif="{{isLoggedIn}}">
       <view class="stats-grid">
         <view class="stats-item">
           <text class="stats-value font-mono">{{totalKwh}}</text>
@@ -45,8 +64,23 @@
     </view>
   </view>
 
-  <!-- 我的车辆 -->
-  <view class="section glass-card">
+  <!-- 我的车辆 - 加载态 -->
+  <view class="section glass-card" wx:if="{{vehicleLoading && isLoggedIn}}">
+    <view class="section-header">
+      <text class="section-title">我的车辆</text>
+    </view>
+    <view class="vehicle-list">
+      <view class="skeleton-vehicle-item" wx:for="{{[1,2]}}" wx:key="*this">
+        <view class="skeleton-circle skeleton-circle-vehicle"></view>
+        <view class="skeleton-lines">
+          <view class="skeleton-line skeleton-line-vehicle-name"></view>
+          <view class="skeleton-line skeleton-line-vehicle-trim"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 我的车辆 - 数据态 -->
+  <view class="section glass-card" wx:elif="{{isLoggedIn}}">
     <view class="section-header">
       <text class="section-title">我的车辆</text>
       <text class="section-link" bindtap="goToAddCar">添加</text>
@@ -68,7 +102,7 @@
   </view>
 
   <!-- 数据管理 -->
-  <view class="section glass-card">
+  <view class="section glass-card" wx:if="{{isLoggedIn}}">
     <view class="section-header">
       <text class="section-title">数据管理</text>
     </view>
@@ -97,7 +131,7 @@
   </view>
 
   <!-- 设置 -->
-  <view class="section glass-card">
+  <view class="section glass-card" wx:if="{{isLoggedIn}}">
     <view class="section-header">
       <text class="section-title">设置</text>
     </view>

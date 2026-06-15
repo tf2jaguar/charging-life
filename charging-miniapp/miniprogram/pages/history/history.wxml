@@ -12,8 +12,21 @@
     </scroll-view>
   </view>
 
-  <!-- 统计概览 -->
-  <view class="overview-card glass-card">
+  <!-- 统计概览 - 加载态 -->
+  <view class="overview-card glass-card" wx:if="{{summaryLoading}}">
+    <view class="overview-row">
+      <view class="overview-left">
+        <view class="skeleton-line skeleton-line-label"></view>
+        <view class="skeleton-line skeleton-line-value-lg"></view>
+      </view>
+      <view class="overview-right">
+        <view class="skeleton-line skeleton-line-label"></view>
+        <view class="skeleton-line skeleton-line-value-lg"></view>
+      </view>
+    </view>
+  </view>
+  <!-- 统计概览 - 数据态 -->
+  <view class="overview-card glass-card" wx:elif="{{summaryCount > 0 || summaryKwh !== '0.0'}}">
     <view class="overview-row">
       <view class="overview-left">
         <text class="overview-label">{{summaryLabel}}</text>
@@ -26,8 +39,25 @@
     </view>
   </view>
 
-  <!-- 记录列表 -->
-  <view class="record-list">
+  <!-- 记录列表 - 加载态 -->
+  <view class="record-list" wx:if="{{listLoading}}">
+    <view class="skeleton-record-group" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <view class="skeleton-line skeleton-line-date"></view>
+      <view class="skeleton-card-list">
+        <view class="skeleton-record-item glass-card" wx:for="{{[1,2]}}" wx:for-item="card" wx:key="*this">
+          <view class="skeleton-record-left">
+            <view class="skeleton-circle skeleton-circle-sm"></view>
+            <view class="skeleton-lines">
+              <view class="skeleton-line skeleton-line-long"></view>
+              <view class="skeleton-line skeleton-line-short"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 记录列表 - 数据态 -->
+  <view class="record-list" wx:elif="{{groupedRecords.length}}">
     <block wx:for="{{groupedRecords}}" wx:key="label">
       <text class="date-label">{{item.label}}</text>
       <view class="record-group">
@@ -42,12 +72,12 @@
   </view>
 
   <!-- 加载更多 -->
-  <view class="load-more" wx:if="{{hasMore}}" bindtap="onLoadMore">
+  <view class="load-more" wx:if="{{!listLoading && hasMore}}" bindtap="onLoadMore">
     <text class="load-more-text">加载更多</text>
   </view>
 
   <!-- 空态 -->
-  <view class="empty-state" wx:if="{{!loading && groupedRecords.length === 0}}">
+  <view class="empty-state" wx:if="{{!loading && !listLoading && groupedRecords.length === 0}}">
     <text class="empty-icon">🔋</text>
     <text class="empty-text">暂无充电记录</text>
     <text class="empty-hint">点击底部录入按钮添加第一条记录</text>

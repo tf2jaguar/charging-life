@@ -19,6 +19,8 @@ Page({
     page: 1,
     hasMore: true,
     loading: true,
+    summaryLoading: true,
+    listLoading: true,
   },
 
   onShow() {
@@ -28,14 +30,15 @@ Page({
     this.setData({ page: 1, records: [], hasMore: true })
 
     if (!auth.isLoggedIn()) {
-      this.setData({ loading: false })
+      this.setData({ loading: false, summaryLoading: false, listLoading: false })
       return
     }
-    this.loadRecords()
     this.loadSummary()
+    this.loadRecords()
   },
 
   async loadSummary() {
+    this.setData({ summaryLoading: true })
     try {
       const vehicleId = app.getCurrentVehicleId()
       const filter = FILTER_MAP[this.data.activeFilter]
@@ -49,14 +52,16 @@ Page({
         summaryKwh: toFixed(res.kwh.value, 1),
         summaryCost: toFixed(res.cost.value),
         summaryLabel: FILTER_LABELS[this.data.activeFilter] + '统计',
+        summaryLoading: false,
       })
     } catch (err) {
       console.error('[loadSummary]', err)
+      this.setData({ summaryLoading: false })
     }
   },
 
   async loadRecords() {
-    this.setData({ loading: true })
+    this.setData({ listLoading: true })
     try {
       const vehicleId = app.getCurrentVehicleId()
       const res = await callCloud('record', {
@@ -77,11 +82,12 @@ Page({
         records: allRecords,
         groupedRecords: this.groupByDate(filtered),
         hasMore: allRecords.length < res.total,
+        listLoading: false,
         loading: false,
       })
     } catch (err) {
       console.error(err)
-      this.setData({ loading: false })
+      this.setData({ listLoading: false, loading: false })
     }
   },
 
