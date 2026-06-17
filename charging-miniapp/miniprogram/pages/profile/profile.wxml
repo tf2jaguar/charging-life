@@ -14,7 +14,7 @@
     </view>
 
     <!-- 未登录 -->
-    <view class="user-area" wx:if="{{!isLoggedIn}}">
+    <view class="user-area" wx:if="{{!isLoggedIn}}" bindtap="goToAuth">
       <view class="avatar">
         <text class="avatar-icon">👤</text>
       </view>

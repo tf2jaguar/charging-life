@@ -90,6 +90,13 @@ Page({
     await Promise.all([loadVehicles, loadStats])
   },
 
+  goToAuth() {
+    if (!auth.isLoggedIn()) {
+      this.setData({ showAuthPopup: true })
+      return
+    }
+  },
+
   goToAddCar() {
     if (!auth.isLoggedIn()) {
       this.setData({ showAuthPopup: true })
@@ -216,7 +223,7 @@ Page({
 
   cleanupExport() {
     if (this._exportFilePath) {
-      try { wx.getFileSystemManager().unlinkSync(this._exportFilePath) } catch (e) {}
+      try { wx.getFileSystemManager().unlinkSync(this._exportFilePath) } catch (e) { }
       this._exportFilePath = null
       this._exportFileName = null
     }
@@ -235,7 +242,7 @@ Page({
         const filePath = res.tempFiles[0].path
         this.doImport(filePath)
       },
-      fail: () => {},
+      fail: () => { },
     })
   },
 

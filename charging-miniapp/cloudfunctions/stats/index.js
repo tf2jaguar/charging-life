@@ -4,28 +4,38 @@ const db = cloud.database()
 const _ = db.command
 const $ = db.command.aggregate
 
+// 北京时间 UTC+8：将 UTC Date 转为"北京时间视角"的 Date 对象
+// 转后 getHours/getMonth/getDate 等返回的即北京时间值
+function toBJDate(val) {
+  if (!val) return null
+  const d = val instanceof Date ? val : new Date(val)
+  if (isNaN(d.getTime())) return null
+  // 用 UTC 时间 +8h 构造新 Date，使其本地方法返回北京时间
+  return new Date(d.getTime() + 8 * 3600 * 1000)
+}
+
 function getPeriodRange(period) {
-  const now = new Date()
+  const now = toBJDate(new Date())
   let start, end
   if (period === 'year') {
-    start = new Date(now.getFullYear(), 0, 1)
-    end = new Date(now.getFullYear() + 1, 0, 1)
+    start = new Date(Date.UTC(now.getFullYear(), 0, 1))
+    end = new Date(Date.UTC(now.getFullYear() + 1, 0, 1))
   } else {
-    start = new Date(now.getFullYear(), now.getMonth(), 1)
-    end = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
+    end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1))
   }
   return { start, end }
 }
 
 function getPrevPeriodRange(period) {
-  const now = new Date()
+  const now = toBJDate(new Date())
   let start, end
   if (period === 'year') {
-    start = new Date(now.getFullYear() - 1, 0, 1)
-    end = new Date(now.getFullYear(), 0, 1)
+    start = new Date(Date.UTC(now.getFullYear() - 1, 0, 1))
+    end = new Date(Date.UTC(now.getFullYear(), 0, 1))
   } else {
-    start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    end = new Date(now.getFullYear(), now.getMonth(), 1)
+    start = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1))
+    end = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
   }
   return { start, end }
 }
@@ -51,15 +61,15 @@ exports.main = async (event, context) => {
           let conditions = { _openid: openid }
           if (vehicleId) conditions.vehicleId = vehicleId
 
-          const now = new Date()
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          const now = toBJDate(new Date())
+          const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
           if (filter === 'week') {
             const weekStart = new Date(today)
-            weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
+            weekStart.setDate(weekStart.getDate() - now.getDay() + 1)
             conditions.startTime = _.gte(weekStart)
           } else if (filter === 'month') {
-            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+            const monthStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
             conditions.startTime = _.gte(monthStart)
           } else if (filter === 'fast') {
             conditions.chargeType = _.in(['fast', 'super'])
@@ -77,7 +87,7 @@ exports.main = async (event, context) => {
           const totalKwh = list.reduce((s, r) => s + (r.chargeKwh || 0), 0)
           const totalCost = list.reduce((s, r) => s + (r.cost || 0), 0)
           const days = new Set(list.map(r => {
-            const d = new Date(r.startTime)
+            const d = toBJDate(r.startTime)
             return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()
           })).size
 
@@ -128,7 +138,7 @@ exports.main = async (event, context) => {
         function calcPer100(records) {
           const sorted = records
             .slice()
-            .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+            .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
           const milestones = []
           sorted.forEach((r, i) => {
             if (r.mileage > 0) milestones.push({ index: i, mileage: r.mileage })
@@ -183,10 +193,10 @@ exports.main = async (event, context) => {
       }
 
       case 'trend': {
-        const now = new Date()
+        const now = toBJDate(new Date())
         const yearVal = year || now.getFullYear()
-        const start = new Date(yearVal, 0, 1)
-        const end = new Date(yearVal + 1, 0, 1)
+        const start = new Date(Date.UTC(yearVal, 0, 1))
+        const end = new Date(Date.UTC(yearVal + 1, 0, 1))
 
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
@@ -199,7 +209,7 @@ exports.main = async (event, context) => {
           count: 0,
         }))
         res.data.forEach(r => {
-          const m = new Date(r.startTime).getMonth()
+          const m = toBJDate(r.startTime).getMonth()
           months[m].kwh += r.chargeKwh || 0
           months[m].cost += r.cost || 0
           months[m].count++
@@ -213,7 +223,6 @@ exports.main = async (event, context) => {
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
           .get()
-
         const slots = [
           { label: '0-7点', range: [0, 7], count: 0 },
           { label: '7-12点', range: [7, 12], count: 0 },
@@ -223,7 +232,7 @@ exports.main = async (event, context) => {
         ]
 
         res.data.forEach(r => {
-          const h = new Date(r.startTime).getHours()
+          const h = toBJDate(r.startTime).getHours()
           for (const s of slots) {
             if (h >= s.range[0] && h < s.range[1]) { s.count++; break }
           }
@@ -279,10 +288,11 @@ exports.main = async (event, context) => {
       }
 
       case 'calendar': {
-        const y = year || new Date().getFullYear()
-        const m = month || (new Date().getMonth() + 1)
-        const start = new Date(y, m - 1, 1)
-        const end = new Date(y, m, 1)
+        const now = toBJDate(new Date())
+        const y = year || now.getFullYear()
+        const m = month || (now.getMonth() + 1)
+        const start = new Date(Date.UTC(y, m - 1, 1))
+        const end = new Date(Date.UTC(y, m, 1))
 
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
@@ -291,7 +301,7 @@ exports.main = async (event, context) => {
         const days = []
         const kwh = {}
         res.data.forEach(r => {
-          const d = new Date(r.startTime).getDate()
+          const d = toBJDate(r.startTime).getDate()
           if (!days.includes(d)) days.push(d)
           kwh[d] = (kwh[d] || 0) + (r.chargeKwh || 0)
         })

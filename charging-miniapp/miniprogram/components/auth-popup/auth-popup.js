@@ -17,6 +17,9 @@ Component({
     'show': function (val) {
       if (val) {
         this.setData({ step: 1, tempNickName: '', tempAvatarUrl: '', saving: false })
+        if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+          this.getTabBar().setData({ show: false })
+        }
       }
     },
   },

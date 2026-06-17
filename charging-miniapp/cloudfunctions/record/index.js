@@ -158,6 +158,7 @@ exports.main = async (event, context) => {
         if (recordRes.data._openid !== openid) {
           return { code: -1, msg: '无权查看' }
         }
+
         const record = recordRes.data
         if (record.vehicleId) {
           try {
