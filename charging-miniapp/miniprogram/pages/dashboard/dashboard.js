@@ -11,6 +11,7 @@ const EMPTY_OVERVIEW = {
   duration: { value: 0, change: 0, direction: 'same' },
   perHundredKwh: { value: 0, change: 0, direction: 'same' },
   perHundredCost: { value: 0, change: 0, direction: 'same' },
+  kwhDisplay: '-',
   costDisplay: '-',
   avgPriceDisplay: '-',
   durationDisplay: '-',
@@ -28,6 +29,7 @@ const EMPTY_OVERVIEW = {
 function formatOverview(overviewRes) {
   if (!overviewRes) return EMPTY_OVERVIEW
   const hasData = overviewRes.count && overviewRes.count.value > 0
+  overviewRes.kwhDisplay = hasData ? toFixed(overviewRes.kwh.value) : '-'
   overviewRes.costDisplay = hasData ? toFixed(overviewRes.cost.value) : '-'
   overviewRes.avgPriceDisplay = hasData ? toFixed(overviewRes.avgPrice.value) : '-'
   overviewRes.durationDisplay = hasData && overviewRes.duration.value ? toFixed(overviewRes.duration.value / 60, 1) : '-'
