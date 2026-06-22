@@ -159,8 +159,8 @@ Page({
         },
       })
       wx.showToast({ title: '保存成功', icon: 'success' })
+      await this.loadDetail(d.recordId)
       this.setData({ isEditMode: false })
-      this.loadDetail(d.recordId)
     } catch (err) {
       wx.showToast({ title: '保存失败', icon: 'none' })
     }
