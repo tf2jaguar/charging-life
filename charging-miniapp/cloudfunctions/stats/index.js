@@ -14,15 +14,18 @@ function toBJDate(val) {
   return new Date(d.getTime() + 8 * 3600 * 1000)
 }
 
+// 北京时间偏移量（毫秒），用于将 Date.UTC 构造的 UTC 时间戳修正为北京时间零点
+const BJ_OFFSET = 8 * 3600 * 1000
+
 function getPeriodRange(period) {
   const now = toBJDate(new Date())
   let start, end
   if (period === 'year') {
-    start = new Date(Date.UTC(now.getFullYear(), 0, 1))
-    end = new Date(Date.UTC(now.getFullYear() + 1, 0, 1))
+    start = new Date(Date.UTC(now.getFullYear(), 0, 1) - BJ_OFFSET)
+    end = new Date(Date.UTC(now.getFullYear() + 1, 0, 1) - BJ_OFFSET)
   } else {
-    start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
-    end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1))
+    start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1) - BJ_OFFSET)
+    end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1) - BJ_OFFSET)
   }
   return { start, end }
 }
@@ -31,11 +34,11 @@ function getPrevPeriodRange(period) {
   const now = toBJDate(new Date())
   let start, end
   if (period === 'year') {
-    start = new Date(Date.UTC(now.getFullYear() - 1, 0, 1))
-    end = new Date(Date.UTC(now.getFullYear(), 0, 1))
+    start = new Date(Date.UTC(now.getFullYear() - 1, 0, 1) - BJ_OFFSET)
+    end = new Date(Date.UTC(now.getFullYear(), 0, 1) - BJ_OFFSET)
   } else {
-    start = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1))
-    end = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
+    start = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1) - BJ_OFFSET)
+    end = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1) - BJ_OFFSET)
   }
   return { start, end }
 }
@@ -65,11 +68,14 @@ exports.main = async (event, context) => {
           const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
           if (filter === 'week') {
-            const weekStart = new Date(today)
-            weekStart.setDate(weekStart.getDate() - now.getDay() + 1)
+            // toBJDate 让 now 的本地方法返回北京时间值，
+            // 但 Date.UTC 构造的是 UTC 零点，比北京零点晚 8 小时，
+            // 因此需要 -BJ_OFFSET 才能得到"北京时间该日 00:00"对应的 UTC 时间戳
+            const dayOfWeek = now.getDay() || 7 // 周日→7，周一→1
+            const weekStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek + 1) - BJ_OFFSET)
             conditions.startTime = _.gte(weekStart)
           } else if (filter === 'month') {
-            const monthStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
+            const monthStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1) - BJ_OFFSET)
             conditions.startTime = _.gte(monthStart)
           } else if (filter === 'fast') {
             conditions.chargeType = _.in(['fast', 'super'])
@@ -195,8 +201,8 @@ exports.main = async (event, context) => {
       case 'trend': {
         const now = toBJDate(new Date())
         const yearVal = year || now.getFullYear()
-        const start = new Date(Date.UTC(yearVal, 0, 1))
-        const end = new Date(Date.UTC(yearVal + 1, 0, 1))
+        const start = new Date(Date.UTC(yearVal, 0, 1) - BJ_OFFSET)
+        const end = new Date(Date.UTC(yearVal + 1, 0, 1) - BJ_OFFSET)
 
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
@@ -291,8 +297,8 @@ exports.main = async (event, context) => {
         const now = toBJDate(new Date())
         const y = year || now.getFullYear()
         const m = month || (now.getMonth() + 1)
-        const start = new Date(Date.UTC(y, m - 1, 1))
-        const end = new Date(Date.UTC(y, m, 1))
+        const start = new Date(Date.UTC(y, m - 1, 1) - BJ_OFFSET)
+        const end = new Date(Date.UTC(y, m, 1) - BJ_OFFSET)
 
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))

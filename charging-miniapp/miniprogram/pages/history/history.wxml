@@ -25,8 +25,8 @@
       </view>
     </view>
   </view>
-  <!-- 统计概览 - 数据态 -->
-  <view class="overview-card glass-card" wx:elif="{{summaryCount > 0 || summaryKwh !== '0.0'}}">
+  <!-- 统计概览 - 数据态（始终展示，含零值） -->
+  <view class="overview-card glass-card" wx:elif="{{!summaryLoading}}">
     <view class="overview-row">
       <view class="overview-left">
         <text class="overview-label">{{summaryLabel}}</text>

@@ -124,7 +124,8 @@ Page({
 
   onFilterTap(e) {
     const idx = e.currentTarget.dataset.index
-    this.setData({ activeFilter: idx })
+    if (idx === this.data.activeFilter) return
+    this.setData({ activeFilter: idx, summaryLoading: true })
     const filtered = this.applyFilter(this.data.records)
     this.setData({
       groupedRecords: this.groupByDate(filtered),
