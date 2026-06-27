@@ -1,0 +1,145 @@
+<view class="page page-content">
+  <!-- 优惠平台 -->
+  <view class="form-group glass-card">
+    <view class="form-label">
+      <text class="form-icon">🏢</text>
+      <text>优惠平台</text>
+    </view>
+    <view class="platform-grid">
+      <view
+        wx:for="{{platforms}}"
+        wx:key="value"
+        class="platform-card {{selectedPlatform === item.value ? 'platform-selected' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="onPlatformTap"
+        style="{{selectedPlatform === item.value ? 'border-color: ' + item.color + '; background: ' + item.bg : ''}}"
+      >
+        <text class="platform-emoji" style="{{selectedPlatform === item.value ? 'color: ' + item.color : ''}}">{{item.value === 'other' ? '📝' : '⚡'}}</text>
+        <text class="platform-name">{{item.label}}</text>
+      </view>
+    </view>
+    <!-- 其他平台名称输入 -->
+    <view wx:if="{{selectedPlatform === 'other'}}" class="other-platform-input">
+      <input class="input-field" placeholder="请输入平台名称" value="{{otherPlatformName}}" bindinput="onOtherPlatformInput" />
+    </view>
+  </view>
+
+  <!-- 优惠时间 -->
+  <view class="form-group glass-card">
+    <view class="form-label">
+      <text class="form-icon">🕐</text>
+      <text>优惠时间</text>
+    </view>
+    <view class="time-row">
+      <view class="time-field">
+        <text class="time-label">开始时间</text>
+        <picker mode="date" value="{{startDate}}" bindchange="onStartDateChange">
+          <view class="input-field picker-field">
+            <text>{{startDate || '选择日期'}}</text>
+          </view>
+        </picker>
+      </view>
+      <view class="time-field">
+        <text class="time-label">&nbsp;</text>
+        <picker mode="time" value="{{startTime}}" bindchange="onStartTimeChange">
+          <view class="input-field picker-field">
+            <text>{{startTime || '选择时间'}}</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    <view class="time-row" style="margin-top: 16rpx;">
+      <view class="time-field">
+        <text class="time-label">结束时间</text>
+        <picker mode="date" value="{{endDate}}" bindchange="onEndDateChange">
+          <view class="input-field picker-field">
+            <text>{{endDate || '选择日期'}}</text>
+          </view>
+        </picker>
+      </view>
+      <view class="time-field">
+        <text class="time-label">&nbsp;</text>
+        <picker mode="time" value="{{endTime}}" bindchange="onEndTimeChange">
+          <view class="input-field picker-field">
+            <text>{{endTime || '选择时间'}}</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <!-- 优惠内容 -->
+  <view class="form-group glass-card">
+    <view class="form-label">
+      <text class="form-icon">💬</text>
+      <text>优惠内容</text>
+      <text class="required-tag">必填</text>
+    </view>
+    <input class="input-field" placeholder="如：新人立减5元" value="{{content}}" bindinput="onContentInput" />
+  </view>
+
+  <!-- 优惠金额 -->
+  <view class="form-group glass-card">
+    <view class="form-label">
+      <text class="form-icon">💰</text>
+      <text>优惠金额</text>
+      <text class="required-tag">必填</text>
+    </view>
+    <view class="input-with-prefix">
+      <text class="input-prefix">¥</text>
+      <input class="input-field input-with-left-pad" type="digit" placeholder="0.00" value="{{amount}}" bindinput="onAmountInput" />
+    </view>
+  </view>
+
+  <!-- 优惠标签 -->
+  <view class="form-group glass-card">
+    <view class="form-label">
+      <text class="form-icon">🏷</text>
+      <text>优惠标签</text>
+    </view>
+    <view class="tag-list">
+      <view
+        wx:for="{{tags}}"
+        wx:key="value"
+        class="tag-pill {{selectedTag === item.value ? 'tag-selected' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="onTagTap"
+        style="{{selectedTag === item.value ? 'border-color: ' + item.color + '; background: ' + item.bg + '; color: ' + item.color : ''}}"
+      >{{item.label}}</view>
+    </view>
+  </view>
+
+  <!-- 领取步骤 -->
+  <view class="form-group glass-card">
+    <view class="form-label-row">
+      <view class="form-label">
+        <text class="form-icon">📋</text>
+        <text>领取步骤</text>
+      </view>
+      <text class="form-hint">每行一步</text>
+    </view>
+    <view class="steps-hint">
+      <view class="steps-hint-row">1. 打开APP</view>
+      <view class="steps-hint-row">2. 进入优惠中心</view>
+      <view class="steps-hint-row">3. 点击领取</view>
+    </view>
+    <textarea class="textarea-field" placeholder="" rows="5" value="{{steps}}" bindinput="onStepsInput" />
+  </view>
+
+  <!-- 跳转链接 -->
+  <view class="form-group glass-card">
+    <view class="form-label">
+      <text class="form-icon">🔗</text>
+      <text>跳转链接</text>
+      <text class="optional-tag">选填</text>
+    </view>
+    <input class="input-field" placeholder="https://example.com/promotion" value="{{link}}" bindinput="onLinkInput" />
+  </view>
+
+  <!-- 提交 -->
+  <view class="submit-area">
+    <button class="btn-primary" bindtap="onSubmit" disabled="{{submitting}}">
+      ✓ 提交上报
+    </button>
+  </view>
+</view>

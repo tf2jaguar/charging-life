@@ -1,0 +1,108 @@
+<view class="page page-content">
+  <!-- 排序标签栏 -->
+  <view class="sort-bar">
+    <view class="sort-tabs">
+      <view
+        class="sort-pill {{sortBy === 'time' ? 'sort-active' : ''}}"
+        data-type="time"
+        bindtap="onSwitchSort"
+      >时间排序</view>
+      <view
+        class="sort-pill {{sortBy === 'amount' ? 'sort-active' : ''}}"
+        data-type="amount"
+        bindtap="onSwitchSort"
+      >金额排序</view>
+    </view>
+    <view class="add-btn" bindtap="onAddPromotion">
+      <text class="add-btn-icon">+</text>
+      <text class="add-btn-text">优惠上报</text>
+    </view>
+  </view>
+
+  <!-- 公告提示图 -->
+  <view class="promo-banner">
+    <view class="banner-content">
+      <view class="banner-header">
+        <text class="banner-icon">📢</text>
+        <text class="banner-title">优惠公告</text>
+      </view>
+      <text class="banner-desc">汇集各大充电平台优惠信息，帮你省下每一分充电费</text>
+      <view class="banner-tags">
+        <text class="banner-tag">限时活动</text>
+        <text class="banner-tag">新人专享</text>
+        <text class="banner-tag">每日更新</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 统计概览 -->
+  <view class="overview-card glass-card">
+    <view class="overview-row">
+      <view class="overview-left">
+        <text class="overview-label">可用优惠</text>
+        <text class="overview-value font-mono">{{totalCount}}<text class="overview-unit"> 个</text></text>
+      </view>
+      <view class="overview-right">
+        <text class="overview-label">累计节省</text>
+        <text class="overview-value font-mono overview-value-amber">¥{{totalSaved}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 活动列表 - 加载态 -->
+  <view class="promo-list" wx:if="{{loading && promotions.length === 0}}">
+    <view class="skeleton-card glass-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <view class="skeleton-inner">
+        <view class="skeleton-circle"></view>
+        <view class="skeleton-lines">
+          <view class="skeleton-line skeleton-line-long"></view>
+          <view class="skeleton-line skeleton-line-short"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 活动列表 - 数据态 -->
+  <view class="promo-list" wx:elif="{{promotions.length}}">
+    <view
+      class="promo-card glass-card"
+      wx:for="{{promotions}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="onPromotionTap"
+    >
+      <view class="promo-card-inner">
+        <view class="promo-icon" style="background: {{item.platformBg}};">
+          <text class="promo-icon-text" style="color: {{item.platformColor}};">⚡</text>
+        </view>
+        <view class="promo-info">
+          <view class="promo-header">
+            <text class="promo-platform">{{item.platformLabel}}</text>
+            <view class="promo-tags-row">
+              <text class="promo-tag" style="color: {{item.tagColor}}; background: {{item.tagBg}};">{{item.tag}}</text>
+              <text class="promo-status-tag" style="color: {{item.statusColor}}; background: {{item.statusBg}};">{{item.statusLabel}}</text>
+            </view>
+          </view>
+          <text class="promo-date">{{item.dateRange}}</text>
+          <view class="promo-bottom">
+            <text class="promo-content">{{item.content}}</text>
+            <text class="promo-amount font-mono">{{item.amountText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{!loading && hasMore}}" bindtap="onLoadMore">
+    <text class="load-more-text">加载更多</text>
+  </view>
+
+  <!-- 空态 -->
+  <view class="empty-state" wx:if="{{!loading && promotions.length === 0}}">
+    <text class="empty-icon">🎁</text>
+    <text class="empty-text">暂无优惠活动</text>
+    <text class="empty-hint">点击右上角"优惠上报"添加</text>
+  </view>
+
+</view>

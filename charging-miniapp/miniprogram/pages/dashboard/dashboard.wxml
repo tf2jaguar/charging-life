@@ -71,6 +71,12 @@
         </view>
         <text class="entry-text">统计分析</text>
       </view>
+      <view class="entry-item" bindtap="goToPromotions">
+        <view class="entry-icon entry-icon-rose">
+          <image class="entry-icon-img" src="/assets/icons/gift.svg" mode="aspectFit" />
+        </view>
+        <text class="entry-text">优惠活动</text>
+      </view>
     </view>
   </view>
 

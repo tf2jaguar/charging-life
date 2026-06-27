@@ -96,10 +96,11 @@
     <view class="time-dist">
       <view wx:for="{{timeDist}}" wx:key="label" class="time-slot">
         <view class="time-bar-bg">
-          <view class="time-bar" style="height: {{item.pct}}%; background: linear-gradient(180deg, #5F8EC5, #8FB8DA);"></view>
+          <view class="time-bar" style="height: {{item.pct}}%; background: linear-gradient(180deg, #5F8EC5, #8FB8DA);">
+            <text class="time-pct font-mono">{{item.pct}}%</text>
+          </view>
         </view>
         <text class="time-label">{{item.label}}</text>
-        <text class="time-pct font-mono">{{item.pct}}%</text>
       </view>
     </view>
   </view>

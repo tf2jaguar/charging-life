@@ -253,6 +253,10 @@ Page({
     wx.switchTab({ url: '/pages/analytics/analytics' })
   },
 
+  goToPromotions() {
+    wx.navigateTo({ url: '/pages/promotions/promotions' })
+  },
+
   goToHistory() {
     wx.switchTab({ url: '/pages/history/history' })
   },

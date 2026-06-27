@@ -1,0 +1,272 @@
+<view class="page page-content">
+  <!-- 加载态 -->
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="skeleton-banner"></view>
+    <view class="skeleton-card"></view>
+    <view class="skeleton-card"></view>
+  </view>
+
+  <!-- 查看模式 -->
+  <block wx:if="{{!loading && promotion && !isEditMode}}">
+    <!-- 顶部横幅 -->
+    <view class="banner glass-card">
+      <view class="banner-bg" style="background: linear-gradient(135deg, {{promotion.platformInfo.color}}, #F97316, #F43F5E);">
+        <view class="banner-deco">
+          <view class="deco-circle deco-circle-1"></view>
+          <view class="deco-circle deco-circle-2"></view>
+          <view class="deco-circle deco-circle-3"></view>
+        </view>
+        <view class="banner-content">
+          <text class="banner-icon">🎁</text>
+          <text class="banner-title">{{promotion.platformName || promotion.platformInfo.label}}优惠</text>
+          <text class="banner-sub">领取示例图</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 优惠信息卡 -->
+    <view class="info-card glass-card">
+      <view class="card-header">
+        <text class="card-icon">⚡</text>
+        <text class="card-title">优惠信息</text>
+      </view>
+      <view class="info-list">
+        <view class="info-row">
+          <text class="info-label">优惠平台</text>
+          <view class="info-value-row">
+            <view class="platform-dot" style="background: {{promotion.platformInfo.color}};"></view>
+            <text class="info-value">{{promotion.platformName || promotion.platformInfo.label}}</text>
+          </view>
+        </view>
+        <view class="info-row">
+          <text class="info-label">优惠标签</text>
+          <view class="tag-badge" style="background: {{promotion.tagInfo.bg}}; color: {{promotion.tagInfo.color}}; border-color: {{promotion.tagInfo.color}}20;">
+            {{promotion.tag}}
+          </view>
+        </view>
+        <view class="info-row">
+          <text class="info-label">优惠内容</text>
+          <text class="info-value info-value-bold">{{promotion.content}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">优惠金额</text>
+          <text class="info-amount">{{promotion.amountText}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">有效时间</text>
+          <text class="info-date">{{promotion.dateRange}}</text>
+        </view>
+        <view class="info-row info-row-last">
+          <text class="info-label">审核状态</text>
+          <view class="status-tag" style="background: {{promotion.statusInfo.bg}}; color: {{promotion.statusInfo.color}};">
+            {{promotion.statusInfo.label}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 领取步骤 -->
+    <view class="info-card glass-card" wx:if="{{promotion.stepList.length > 0}}">
+      <view class="card-header">
+        <text class="card-icon">📋</text>
+        <text class="card-title">领取步骤</text>
+      </view>
+      <view class="steps-list">
+        <view wx:for="{{promotion.stepList}}" wx:key="index" class="step-item">
+          <view class="step-left">
+            <view class="step-num {{index === promotion.stepList.length - 1 ? 'step-num-last' : ''}}">{{index + 1}}</view>
+            <view wx:if="{{index < promotion.stepList.length - 1}}" class="step-line"></view>
+          </view>
+          <view class="step-content">
+            <text class="step-text">{{item}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 跳转链接 -->
+    <view class="info-card glass-card" wx:if="{{promotion.link}}">
+      <view class="card-header">
+        <text class="card-icon">🔗</text>
+        <text class="card-title">跳转链接</text>
+      </view>
+      <view class="link-box" bindtap="onGoLink">
+        <view class="link-left">
+          <text class="link-icon">↗</text>
+          <text class="link-text">前往{{promotion.platformName || promotion.platformInfo.label}}领取优惠</text>
+        </view>
+        <text class="link-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view class="bottom-bar">
+      <view class="btn-delete" bindtap="onDeleteTap">删除</view>
+      <view class="btn-go" bindtap="onGoLink">立即领取</view>
+    </view>
+  </block>
+
+  <!-- 编辑模式 -->
+  <block wx:if="{{!loading && promotion && isEditMode}}">
+    <!-- 平台选择 -->
+    <view class="form-group glass-card">
+      <view class="form-label">
+        <text class="form-icon">🏢</text>
+        <text>优惠平台</text>
+      </view>
+      <view class="platform-grid">
+        <view
+          wx:for="{{platforms}}"
+          wx:key="value"
+          class="platform-card {{editPlatform === item.value ? 'platform-selected' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onEditPlatformTap"
+          style="{{editPlatform === item.value ? 'border-color: ' + item.color + '; background: ' + item.bg : ''}}"
+        >
+          <text class="platform-emoji" style="{{editPlatform === item.value ? 'color: ' + item.color : ''}}">{{item.value === 'other' ? '📝' : '⚡'}}</text>
+          <text class="platform-name">{{item.label}}</text>
+        </view>
+      </view>
+      <!-- 其他平台名称输入 -->
+      <view wx:if="{{editPlatform === 'other'}}" class="other-platform-input">
+        <input class="input-field" placeholder="请输入平台名称" value="{{editOtherPlatformName}}" bindinput="onEditOtherPlatformInput" />
+      </view>
+    </view>
+
+    <!-- 时间选择 -->
+    <view class="form-group glass-card">
+      <view class="form-label">
+        <text class="form-icon">🕐</text>
+        <text>优惠时间</text>
+      </view>
+      <view class="time-row">
+        <view class="time-field">
+          <text class="time-label">开始时间</text>
+          <picker mode="date" value="{{editStartDate}}" bindchange="onEditStartDateChange">
+            <view class="input-field picker-field"><text>{{editStartDate || '选择日期'}}</text></view>
+          </picker>
+        </view>
+        <view class="time-field">
+          <text class="time-label">&nbsp;</text>
+          <picker mode="time" value="{{editStartTime}}" bindchange="onEditStartTimeChange">
+            <view class="input-field picker-field"><text>{{editStartTime || '选择时间'}}</text></view>
+          </picker>
+        </view>
+      </view>
+      <view class="time-row" style="margin-top: 16rpx;">
+        <view class="time-field">
+          <text class="time-label">结束时间</text>
+          <picker mode="date" value="{{editEndDate}}" bindchange="onEditEndDateChange">
+            <view class="input-field picker-field"><text>{{editEndDate || '选择日期'}}</text></view>
+          </picker>
+        </view>
+        <view class="time-field">
+          <text class="time-label">&nbsp;</text>
+          <picker mode="time" value="{{editEndTime}}" bindchange="onEditEndTimeChange">
+            <view class="input-field picker-field"><text>{{editEndTime || '选择时间'}}</text></view>
+          </picker>
+        </view>
+      </view>
+    </view>
+
+    <!-- 优惠内容 -->
+    <view class="form-group glass-card">
+      <view class="form-label">
+        <text class="form-icon">💬</text>
+        <text>优惠内容</text>
+      </view>
+      <input class="input-field" placeholder="如：新人立减5元" value="{{editContent}}" bindinput="onEditContentInput" />
+    </view>
+
+    <!-- 优惠金额 -->
+    <view class="form-group glass-card">
+      <view class="form-label">
+        <text class="form-icon">💰</text>
+        <text>优惠金额</text>
+      </view>
+      <view class="input-with-prefix">
+        <text class="input-prefix">¥</text>
+        <input class="input-field input-with-left-pad" type="digit" placeholder="0.00" value="{{editAmount}}" bindinput="onEditAmountInput" />
+      </view>
+    </view>
+
+    <!-- 标签选择 -->
+    <view class="form-group glass-card">
+      <view class="form-label">
+        <text class="form-icon">🏷</text>
+        <text>优惠标签</text>
+      </view>
+      <view class="tag-list">
+        <view
+          wx:for="{{tags}}"
+          wx:key="value"
+          class="tag-pill {{editTag === item.value ? 'tag-selected' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onEditTagTap"
+          style="{{editTag === item.value ? 'border-color: ' + item.color + '; background: ' + item.bg + '; color: ' + item.color : ''}}"
+        >{{item.label}}</view>
+      </view>
+    </view>
+
+    <!-- 管理员：状态选择 -->
+    <view wx:if="{{isAdmin}}" class="form-group glass-card">
+      <view class="form-label">
+        <text class="form-icon">📌</text>
+        <text>审核状态</text>
+      </view>
+      <picker range="{{statusList}}" range-key="label" value="{{editStatusIndex}}" bindchange="onStatusPickerChange">
+        <view class="status-picker-field">
+          <view class="status-tag" style="background: {{statusList[editStatusIndex].bg}}; color: {{statusList[editStatusIndex].color}};">
+            {{statusList[editStatusIndex].label}}
+          </view>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 领取步骤 -->
+    <view class="form-group glass-card">
+      <view class="form-label-row">
+        <view class="form-label">
+          <text class="form-icon">📋</text>
+          <text>领取步骤</text>
+        </view>
+        <text class="form-hint">每行一步</text>
+      </view>
+      <view class="steps-hint">
+        <view class="steps-hint-row">1. 打开APP</view>
+        <view class="steps-hint-row">2. 进入优惠中心</view>
+        <view class="steps-hint-row">3. 点击领取</view>
+      </view>
+      <textarea class="textarea-field" placeholder="" rows="5" value="{{editSteps}}" bindinput="onEditStepsInput" />
+    </view>
+
+    <!-- 跳转链接 -->
+    <view class="form-group glass-card">
+      <view class="form-label">
+        <text class="form-icon">🔗</text>
+        <text>跳转链接</text>
+      </view>
+      <input class="input-field" placeholder="https://example.com/promotion" value="{{editLink}}" bindinput="onEditLinkInput" />
+    </view>
+
+    <!-- 编辑底部栏 -->
+    <view class="bottom-bar">
+      <view class="btn-cancel" bindtap="onCancelEdit">取消</view>
+      <view class="btn-save" bindtap="onSave">保存修改</view>
+    </view>
+  </block>
+
+  <!-- 删除确认弹窗 -->
+  <view wx:if="{{showDeleteModal}}" class="modal-mask" bindtap="onHideDeleteModal">
+    <view class="drawer" catchtap="">
+      <view class="drawer-handle"></view>
+      <text class="drawer-title">确认删除</text>
+      <text class="drawer-desc">删除后将无法恢复此优惠记录，确定要删除吗？</text>
+      <view class="drawer-actions">
+        <view class="drawer-btn drawer-btn-cancel" bindtap="onHideDeleteModal">取消</view>
+        <view class="drawer-btn drawer-btn-delete" bindtap="onConfirmDelete">删除</view>
+      </view>
+    </view>
+  </view>
+</view>

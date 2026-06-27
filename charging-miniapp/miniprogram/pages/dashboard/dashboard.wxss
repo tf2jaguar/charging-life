@@ -154,7 +154,7 @@
 
 .entry-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16rpx;
 }
 
@@ -194,6 +194,14 @@
 
 .entry-icon-violet {
   background: rgba(138, 92, 246, 0.263);
+}
+
+.entry-icon-rose {
+  background: rgba(244, 63, 94, 0.15);
+}
+
+.entry-icon-emoji {
+  font-size: 40rpx;
 }
 
 .entry-text {

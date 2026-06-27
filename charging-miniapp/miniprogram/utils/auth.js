@@ -15,6 +15,16 @@ const isLoggedIn = function () {
   return !!_userInfo
 }
 
+// 获取用户角色列表
+const getRoles = function () {
+  return (_userInfo && _userInfo.roles) || []
+}
+
+// 判断当前用户是否为管理员（roles中包含admin）
+const isAdmin = function () {
+  return getRoles().indexOf('admin') !== -1
+}
+
 // Call cloud to get openid and check if user exists
 const initOpenId = function () {
   return wx.cloud.callFunction({
@@ -66,6 +76,8 @@ module.exports = {
   getUserInfo: getUserInfo,
   getOpenId: getOpenId,
   isLoggedIn: isLoggedIn,
+  getRoles: getRoles,
+  isAdmin: isAdmin,
   initOpenId: initOpenId,
   saveUserInfo: saveUserInfo,
   logout: logout,

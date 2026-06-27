@@ -6,7 +6,10 @@
     "pages/profile/profile",
     "pages/add-record/add-record",
     "pages/record-detail/record-detail",
-    "pages/add-car/add-car"
+    "pages/add-car/add-car",
+    "pages/promotions/promotions",
+    "pages/promotion-add/promotion-add",
+    "pages/promotion-detail/promotion-detail"
   ],
   "window": {
     "backgroundTextStyle": "light",

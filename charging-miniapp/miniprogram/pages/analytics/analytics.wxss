@@ -168,30 +168,38 @@
 
 .time-bar-bg {
   height: 192rpx;
+  width: 100%;
   background: rgba(116, 163, 212, 0.1);
   border-radius: 12rpx;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 16rpx;
+  padding: 0 16rpx;
 }
 
 .time-bar {
   width: 100%;
   border-radius: 8rpx;
   min-height: 8rpx;
+  position: relative;
+}
+
+.time-pct {
+  font-size: 18rpx;
+  font-weight: 600;
+  color: #5F8EC5;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8rpx;
+  white-space: nowrap;
 }
 
 .time-label {
   font-size: 22rpx;
   color: #64748B;
   margin-top: 16rpx;
-  display: block;
-}
-
-.time-pct {
-  font-size: 22rpx;
-  font-weight: 600;
   display: block;
 }
 

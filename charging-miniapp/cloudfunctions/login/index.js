@@ -40,6 +40,7 @@ exports.main = async (event, context) => {
           avatarUrl: event.avatarUrl || '',
           phone: '',
           defaultVehicleId: '',
+          roles: [],
           settings: {
             notification: true,
             budgetLimit: 800,
