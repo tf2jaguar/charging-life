@@ -9,6 +9,7 @@ Page({
     isEditMode: false,
     showDeleteModal: false,
     loading: true,
+    isOwner: false,
     isAdmin: false,
     // 编辑字段
     editPlatform: '',
@@ -45,6 +46,9 @@ Page({
 
       // 格式化显示
       promotion.platformInfo = PLATFORMS[promotion.platform] || { label: promotion.platformName || promotion.platform, color: '#94A3B8', bg: 'rgba(148,163,184,0.1)' }
+      if (promotion.platform === 'other' && promotion.platformName) {
+        promotion.platformInfo.label = '其他-' + promotion.platformName
+      }
       promotion.tagInfo = PROMO_TAGS[promotion.tag] || { color: '#94A3B8', bg: 'rgba(148,163,184,0.1)' }
       promotion.statusInfo = PROMO_STATUS[promotion.status] || PROMO_STATUS.pending
 
@@ -71,9 +75,19 @@ Page({
       // 金额格式化
       promotion.amountText = promotion.amount ? '¥' + Number(promotion.amount).toFixed(2) : '¥0.00'
 
+      // 发布信息格式化
+      promotion.publisherName = promotion.nickName || '匿名用户'
+      if (promotion.createdAt) {
+        const c = new Date(promotion.createdAt)
+        promotion.publishTimeText = c.getFullYear() + '-' + pad(c.getMonth() + 1) + '-' + pad(c.getDate()) + ' ' + pad(c.getHours()) + ':' + pad(c.getMinutes())
+      } else {
+        promotion.publishTimeText = '--'
+      }
+
       this.setData({
         promotion,
         loading: false,
+        isOwner: promotion._openid === auth.getOpenId(),
         // 初始化编辑字段
         editPlatform: promotion.platform,
         editTag: promotion.tag,
@@ -205,10 +219,10 @@ Page({
         link: d.editLink,
       }
       if (d.editStartDate && d.editStartTime) {
-        updateData.startTime = new Date(d.editStartDate + 'T' + d.editStartTime).getTime()
+        updateData.startTime = d.editStartDate + 'T' + d.editStartTime
       }
       if (d.editEndDate && d.editEndTime) {
-        updateData.endTime = new Date(d.editEndDate + 'T' + d.editEndTime).getTime()
+        updateData.endTime = d.editEndDate + 'T' + d.editEndTime
       }
       // 管理员可修改状态
       if (d.isAdmin && d.editStatus) {

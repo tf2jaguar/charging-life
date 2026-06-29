@@ -17,7 +17,7 @@ const PLATFORM_LIST = Object.keys(PLATFORMS).map(function (key) {
 
 const PROMO_TAGS = {
   '新人优惠': { color: '#D97706', bg: 'rgba(245,158,11,0.1)' },
-  '限时活动': { color: '#0891B2', bg: 'rgba(8,145,178,0.1)' },
+  '日常活动': { color: '#0891B2', bg: 'rgba(8,145,178,0.1)' },
   '会员专享': { color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)' },
   '周末特惠': { color: '#F43F5E', bg: 'rgba(244,63,94,0.1)' },
   '每日签到': { color: '#10B981', bg: 'rgba(16,185,129,0.1)' },

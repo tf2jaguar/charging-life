@@ -53,7 +53,7 @@ Page({
         var platformInfo = PLATFORMS[p.platform] || { label: p.platformName || '未知', color: '#94A3B8', bg: 'rgba(148,163,184,0.1)' }
         var tagInfo = PROMO_TAGS[p.tag] || { color: '#94A3B8', bg: 'rgba(148,163,184,0.1)' }
         var statusInfo = PROMO_STATUS[p.status] || PROMO_STATUS['pending']
-        p.platformLabel = platformInfo.label
+        p.platformLabel = p.platform === 'other' && p.platformName ? '其他-' + p.platformName : platformInfo.label
         p.platformColor = platformInfo.color
         p.platformBg = platformInfo.bg
         p.tagColor = tagInfo.color

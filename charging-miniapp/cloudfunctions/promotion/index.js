@@ -81,8 +81,8 @@ exports.main = async (event, context) => {
         if (!data.promotionId) return { code: -1, msg: '缺少promotionId' }
         const existRes = await db.collection('promotions').doc(data.promotionId).get()
         const doc = existRes.data
-        if (doc._openid !== openid && !admin) {
-          return { code: -1, msg: '无权删除' }
+        if (doc._openid !== openid) {
+          return { code: -1, msg: '只能删除自己创建的记录' }
         }
         await db.collection('promotions').doc(data.promotionId).remove()
         return { code: 0, data: {} }
@@ -143,9 +143,20 @@ exports.main = async (event, context) => {
         if (!data.promotionId) return { code: -1, msg: '缺少promotionId' }
         const res = await db.collection('promotions').doc(data.promotionId).get()
         const doc = res.data
-        // 普通用户只能看自己创建的或 active/expired 的数据
-        if (!admin && doc._openid !== openid && !['active', 'expired'].includes(doc.status)) {
+        // 普通用户只能看自己创建的或生效中的数据
+        if (!admin && doc._openid !== openid && doc.status !== 'active') {
           return { code: -1, msg: '无权查看' }
+        }
+        // 查询发布者昵称
+        try {
+          const userRes = await db.collection('users').where({ _openid: doc._openid }).field({ nickName: true }).get()
+          if (userRes.data && userRes.data.length > 0) {
+            doc.nickName = userRes.data[0].nickName || '匿名用户'
+          } else {
+            doc.nickName = '匿名用户'
+          }
+        } catch (e) {
+          doc.nickName = '匿名用户'
         }
         return { code: 0, data: doc }
       }

@@ -28,7 +28,7 @@
       </view>
       <text class="banner-desc">汇集各大充电平台优惠信息，帮你省下每一分充电费</text>
       <view class="banner-tags">
-        <text class="banner-tag">限时活动</text>
+        <text class="banner-tag">日常活动</text>
         <text class="banner-tag">新人专享</text>
         <text class="banner-tag">每日更新</text>
       </view>
