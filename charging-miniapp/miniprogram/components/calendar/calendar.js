@@ -39,6 +39,12 @@ Component({
     'chargedDays, kwhMap': function () {
       this.renderGrid()
     },
+    'year, month': function (y, m) {
+      if (y && m) {
+        this.setData({ displayYear: y, displayMonth: m })
+        this.renderGrid()
+      }
+    },
   },
 
   methods: {

@@ -5,16 +5,13 @@ const _ = db.command
 const $ = db.command.aggregate
 
 // 北京时间 UTC+8：将 UTC Date 转为"北京时间视角"的 Date 对象
-// 转后 getHours/getMonth/getDate 等返回的即北京时间值
 function toBJDate(val) {
   if (!val) return null
   const d = val instanceof Date ? val : new Date(val)
   if (isNaN(d.getTime())) return null
-  // 用 UTC 时间 +8h 构造新 Date，使其本地方法返回北京时间
   return new Date(d.getTime() + 8 * 3600 * 1000)
 }
 
-// 北京时间偏移量（毫秒），用于将 Date.UTC 构造的 UTC 时间戳修正为北京时间零点
 const BJ_OFFSET = 8 * 3600 * 1000
 
 function getPeriodRange(period) {
@@ -53,13 +50,17 @@ exports.main = async (event, context) => {
     if (vehicleId) conditions.vehicleId = vehicleId
     return conditions
   }
+
+  // 只读取需要的字段，减少数据传输
+  const STATS_FIELDS = { chargeKwh: true, cost: true, startTime: true, duration: true, mileage: true, vehicleId: true, chargeType: true }
+  const CALENDAR_FIELDS = { chargeKwh: true, startTime: true }
+  const RECENT_FIELDS = { chargeKwh: true, startTime: true, chargeType: true, cost: true, duration: true, stationName: true, endTime: true }
+
   console.info('[stats] openid=%s, action=%s, period=%s', openid, action, periodVal)
 
   try {
     switch (action) {
       case 'overview': {
-        // filter 模式：按时间/类型筛选，返回绝对值（供 history 页使用）
-        // period 模式：按月/年统计，含环比（供 dashboard/analytics/profile 使用）
         if (filter) {
           let conditions = { _openid: openid }
           if (vehicleId) conditions.vehicleId = vehicleId
@@ -68,10 +69,7 @@ exports.main = async (event, context) => {
           const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
 
           if (filter === 'week') {
-            // toBJDate 让 now 的本地方法返回北京时间值，
-            // 但 Date.UTC 构造的是 UTC 零点，比北京零点晚 8 小时，
-            // 因此需要 -BJ_OFFSET 才能得到"北京时间该日 00:00"对应的 UTC 时间戳
-            const dayOfWeek = now.getDay() || 7 // 周日→7，周一→1
+            const dayOfWeek = now.getDay() || 7
             const weekStart = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek + 1) - BJ_OFFSET)
             conditions.startTime = _.gte(weekStart)
           } else if (filter === 'month') {
@@ -114,9 +112,11 @@ exports.main = async (event, context) => {
         const [curRes, prevRes] = await Promise.all([
           db.collection('records')
             .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
+            .field(STATS_FIELDS)
             .get(),
           db.collection('records')
             .where(addVehicleFilter({ _openid: openid, startTime: _.gte(prevStart).and(_.lt(prevEnd)) }))
+            .field(STATS_FIELDS)
             .get(),
         ])
 
@@ -140,7 +140,7 @@ exports.main = async (event, context) => {
         const curAvgKwh = cur.length > 0 ? Math.round(curKwh / cur.length * 10) / 10 : 0
         const prevAvgKwh = prev.length > 0 ? Math.round(prevKwh / prev.length * 10) / 10 : 0
 
-        // 百公里电耗/成本：按时间排序全部记录，用相邻有里程记录之间的所有充电量计算
+        // 百公里电耗/成本
         function calcPer100(records) {
           const sorted = records
             .slice()
@@ -158,7 +158,6 @@ exports.main = async (event, context) => {
             const delta = milestones[m].mileage - milestones[m - 1].mileage
             if (delta <= 0) continue
             totalMileageDelta += delta
-            // 累加两次里程读数之间（含前端点，不含后端点）所有记录的充电量和费用
             for (let i = milestones[m - 1].index; i < milestones[m].index; i++) {
               totalKwhInRange += sorted[i].chargeKwh || 0
               totalCostInRange += sorted[i].cost || 0
@@ -206,6 +205,7 @@ exports.main = async (event, context) => {
 
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
+          .field({ chargeKwh: true, cost: true, startTime: true })
           .get()
 
         const months = Array.from({ length: 12 }, (_, i) => ({
@@ -228,6 +228,7 @@ exports.main = async (event, context) => {
         const { start, end } = getPeriodRange(periodVal)
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
+          .field({ startTime: true })
           .get()
         const slots = [
           { label: '0-7点', range: [0, 7], count: 0 },
@@ -254,6 +255,7 @@ exports.main = async (event, context) => {
         const { start, end } = getPeriodRange(periodVal)
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
+          .field({ chargeType: true })
           .get()
 
         const types = { super: 0, fast: 0, slow: 0 }
@@ -275,6 +277,7 @@ exports.main = async (event, context) => {
         const { start, end } = getPeriodRange(periodVal)
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
+          .field({ stationName: true, chargeKwh: true, cost: true })
           .get()
 
         const stationMap = {}
@@ -302,6 +305,7 @@ exports.main = async (event, context) => {
 
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
+          .field(CALENDAR_FIELDS)
           .get()
 
         const days = []
@@ -331,15 +335,149 @@ exports.main = async (event, context) => {
           .where(addVehicleFilter({ _openid: openid }))
           .orderBy('startTime', 'desc')
           .limit(limit)
+          .field(RECENT_FIELDS)
           .get()
         return { code: 0, data: res.data }
+      }
+
+      // 首页组合接口：一次返回概览 + 最近记录 + 日历
+      // 减少 3 次云函数调用为 1 次，大幅降低冷启动开销
+      // 支持指定 year/month，默认当前月
+      case 'dashboard': {
+        const now = toBJDate(new Date())
+        const y = event.year || now.getFullYear()
+        const m = event.month || (now.getMonth() + 1)
+
+        // 当前月范围
+        const start = new Date(Date.UTC(y, m - 1, 1) - BJ_OFFSET)
+        const end = new Date(Date.UTC(y, m, 1) - BJ_OFFSET)
+
+        // 上月范围（用于环比）
+        let prevY = y, prevM = m - 1
+        if (prevM < 1) { prevM = 12; prevY-- }
+        const prevStart = new Date(Date.UTC(prevY, prevM - 1, 1) - BJ_OFFSET)
+        const prevEnd = new Date(Date.UTC(prevY, prevM, 1) - BJ_OFFSET)
+
+        const [curRes, prevRes, recentRes] = await Promise.all([
+          // 当前月记录（用于概览 + 日历）
+          db.collection('records')
+            .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
+            .field(STATS_FIELDS)
+            .get(),
+          // 上月记录（用于环比）
+          db.collection('records')
+            .where(addVehicleFilter({ _openid: openid, startTime: _.gte(prevStart).and(_.lt(prevEnd)) }))
+            .field(STATS_FIELDS)
+            .get(),
+          // 最近 2 条记录
+          db.collection('records')
+            .where(addVehicleFilter({ _openid: openid }))
+            .orderBy('startTime', 'desc')
+            .limit(2)
+            .field(RECENT_FIELDS)
+            .get(),
+        ])
+
+        const cur = curRes.data
+        const prev = prevRes.data
+        const recent = recentRes.data
+
+        // === 计算概览 ===
+        const sumField = (arr, field) => arr.reduce((s, r) => s + (r[field] || 0), 0)
+        const curKwh = sumField(cur, 'chargeKwh')
+        const curCost = sumField(cur, 'cost')
+        const curDuration = sumField(cur, 'duration')
+        const prevKwh = sumField(prev, 'chargeKwh')
+        const prevCost = sumField(prev, 'cost')
+        const prevDuration = sumField(prev, 'duration')
+
+        const curAvgPrice = curKwh > 0 ? Math.round((curCost / curKwh) * 100) / 100 : 0
+        const prevAvgPrice = prevKwh > 0 ? Math.round((prevCost / prevKwh) * 100) / 100 : 0
+        const curAvgDuration = cur.length > 0 ? Math.round(curDuration / cur.length) : 0
+        const prevAvgDuration = prev.length > 0 ? Math.round(prevDuration / prev.length) : 0
+        const curAvgKwh = cur.length > 0 ? Math.round(curKwh / cur.length * 10) / 10 : 0
+        const prevAvgKwh = prev.length > 0 ? Math.round(prevKwh / prev.length * 10) / 10 : 0
+
+        function calcPer100(records) {
+          const sorted = records.slice().sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+          const milestones = []
+          sorted.forEach((r, i) => { if (r.mileage > 0) milestones.push({ index: i, mileage: r.mileage }) })
+          if (milestones.length < 2) return { perHundredKwh: 0, perHundredCost: 0 }
+          let totalMileageDelta = 0, totalKwhInRange = 0, totalCostInRange = 0
+          for (let m = 1; m < milestones.length; m++) {
+            const delta = milestones[m].mileage - milestones[m - 1].mileage
+            if (delta <= 0) continue
+            totalMileageDelta += delta
+            for (let i = milestones[m - 1].index; i < milestones[m].index; i++) {
+              totalKwhInRange += sorted[i].chargeKwh || 0
+              totalCostInRange += sorted[i].cost || 0
+            }
+          }
+          return {
+            perHundredKwh: totalMileageDelta > 0 ? Math.round(totalKwhInRange / totalMileageDelta * 100 * 10) / 10 : 0,
+            perHundredCost: totalMileageDelta > 0 ? Math.round(totalCostInRange / totalMileageDelta * 100 * 100) / 100 : 0,
+          }
+        }
+
+        function calcChange(curVal, prevVal, lowerIsBetter) {
+          if (!prevVal || prevVal === 0) return { value: curVal, change: 0, direction: 'same' }
+          const pct = ((curVal - prevVal) / prevVal * 100)
+          let direction
+          if (pct > 0) direction = lowerIsBetter ? 'negative' : 'positive'
+          else if (pct < 0) direction = lowerIsBetter ? 'positive' : 'negative'
+          else direction = 'same'
+          return { value: curVal, change: Math.round(pct * 10) / 10, direction }
+        }
+
+        const curPer100 = calcPer100(cur)
+        const prevPer100 = calcPer100(prev)
+
+        const overview = {
+          count: calcChange(cur.length, prev.length, false),
+          kwh: calcChange(curKwh, prevKwh, false),
+          cost: calcChange(curCost, prevCost, true),
+          avgPrice: calcChange(curAvgPrice, prevAvgPrice, true),
+          duration: calcChange(curDuration, prevDuration, false),
+          avgDuration: calcChange(curAvgDuration, prevAvgDuration, true),
+          avgKwh: calcChange(curAvgKwh, prevAvgKwh, false),
+          perHundredKwh: calcChange(curPer100.perHundredKwh, prevPer100.perHundredKwh, true),
+          perHundredCost: calcChange(curPer100.perHundredCost, prevPer100.perHundredCost, true),
+        }
+
+        // === 从当前月数据计算日历（免去一次 DB 查询） ===
+        const days = []
+        const kwh = {}
+        cur.forEach(r => {
+          const d = toBJDate(r.startTime).getDate()
+          if (!days.includes(d)) days.push(d)
+          kwh[d] = (kwh[d] || 0) + (r.chargeKwh || 0)
+        })
+        const totalKwh = Object.values(kwh).reduce((s, v) => s + v, 0)
+        const calendar = {
+          days: days.sort((a, b) => a - b),
+          kwh: kwh,
+          totalKwh: Math.round(totalKwh * 10) / 10,
+          count: cur.length,
+        }
+
+        // === 最近记录 ===
+        const recentRecords = recent
+
+        return {
+          code: 0,
+          data: {
+            overview: overview,
+            recentRecords: recentRecords,
+            calendar: calendar,
+          },
+        }
       }
 
       default:
         return { code: -1, msg: '未知action' }
     }
   } catch (err) {
-    console.error('云函数执行异常', err); // 新增：打印完整错误栈
+    console.error('云函数执行异常', err)
     return { code: -1, msg: err.message }
   }
 }

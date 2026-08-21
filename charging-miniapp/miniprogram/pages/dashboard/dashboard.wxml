@@ -80,9 +80,24 @@
     </view>
   </view>
 
-  <!-- 本月概览 - 加载态 -->
+  <!-- 月份概览 - 标题导航 -->
+  <view class="overview-section">
+    <view class="month-nav-bar">
+      <view class="month-nav-btn" bindtap="onPrevMonth">
+        <text class="month-nav-arrow">‹</text>
+      </view>
+      <view class="month-nav-info">
+        <text class="month-nav-label" wx:if="{{!overviewLoading}}">{{currentYear}}年{{currentMonth}}月概览</text>
+        <text class="month-nav-label" wx:else>{{currentYear}}年{{currentMonth}}月概览</text>
+      </view>
+      <view class="month-nav-btn" bindtap="onNextMonth">
+        <text class="month-nav-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 概览 - 加载态 -->
   <view class="overview-section" wx:if="{{overviewLoading}}">
-    <text class="section-title">本月概览</text>
     <view class="overview-grid">
       <view class="skeleton-card" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
         <view class="skeleton-line skeleton-line-icon"></view>
@@ -91,9 +106,8 @@
       </view>
     </view>
   </view>
-  <!-- 本月概览 - 数据态 -->
+  <!-- 概览 - 数据态 -->
   <view class="overview-section" wx:else>
-    <text class="section-title">本月概览</text>
     <view class="overview-grid">
       <stat-card
         iconSrc="/assets/icons/flashlight-blue.svg" iconBg="rgba(8,145,178,0.1)" iconColor="#0891B2"
@@ -155,8 +169,11 @@
     </view>
   </view>
 
-  <!-- 充电日历 - 加载态 -->
-  <view class="calendar-section" wx:if="{{calendarLoading}}">
+  <!-- 日历触发区（占位元素，用于 IntersectionObserver 懒加载） -->
+  <view class="calendar-trigger"></view>
+
+  <!-- 充电日历 - 懒加载，下滑到时才渲染 -->
+  <view class="calendar-section" wx:if="{{calendarVisible && calendarLoading}}">
     <view class="calendar-card glass-card skeleton-calendar">
       <view class="skeleton-calendar-header">
         <view class="skeleton-line skeleton-line-month"></view>
@@ -166,10 +183,12 @@
       </view>
     </view>
   </view>
-  <!-- 充电日历 - 数据态 -->
-  <view class="calendar-section" wx:else>
+  <!-- 充电日历 - 渲染后常驻，直至下次触发更新 -->
+  <view class="calendar-section" wx:elif="{{calendarVisible}}">
     <view class="calendar-card glass-card">
       <calendar
+        year="{{currentYear}}"
+        month="{{currentMonth}}"
         chargedDays="{{calendarDays}}"
         kwhMap="{{calendarKwh}}"
         totalCount="{{calendarCount}}"

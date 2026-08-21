@@ -1,4 +1,4 @@
-const { callCloud } = require('../../utils/cloud')
+const { callCloud, callCloudCacheFirst, callCloudCached } = require('../../utils/cloud')
 const { formatRelativeDate, formatDate, formatDuration, toFixed } = require('../../utils/util')
 const auth = require('../../utils/auth')
 const app = getApp()
@@ -42,11 +42,12 @@ Page({
     try {
       const vehicleId = app.getCurrentVehicleId()
       const filter = FILTER_MAP[this.data.activeFilter]
-      const res = await callCloud('stats', {
+      // 概要用缓存，3 分钟
+      const res = await callCloudCached('stats', {
         action: 'overview',
         filter,
         vehicleId,
-      })
+      }, 3 * 60 * 1000)
       this.setData({
         summaryCount: res.count.value,
         summaryKwh: toFixed(res.kwh.value, 1),
@@ -64,6 +65,7 @@ Page({
     this.setData({ listLoading: true })
     try {
       const vehicleId = app.getCurrentVehicleId()
+      // 记录列表不用缓存（数据经常变，且分页），但用 .field 优化已在云函数中
       const res = await callCloud('record', {
         action: 'list',
         data: { page: this.data.page, pageSize: 20, vehicleId },
@@ -130,6 +132,7 @@ Page({
     this.setData({
       groupedRecords: this.groupByDate(filtered),
     })
+    // 切换过滤器时强制刷新概要（不走缓存，因为 filter 变了）
     this.loadSummary()
   },
 

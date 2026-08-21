@@ -210,6 +210,48 @@
   color: var(--app-text, #164E63);
 }
 
+/* 月份导航栏 */
+.month-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40rpx;
+  padding: 0 0 24rpx;
+}
+
+.month-nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(8, 145, 178, 0.08);
+  transition: background 0.2s;
+}
+
+.month-nav-btn:active {
+  background: rgba(8, 145, 178, 0.18);
+}
+
+.month-nav-arrow {
+  font-size: 36rpx;
+  color: #0891B2;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.month-nav-info {
+  text-align: center;
+  min-width: 200rpx;
+}
+
+.month-nav-label {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #164E63;
+}
+
 /* 概览 */
 .overview-section {
   padding: 32rpx;
@@ -219,6 +261,12 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24rpx;
+}
+
+/* 日历懒加载触发区 */
+.calendar-trigger {
+  height: 2rpx;
+  margin: 0 32rpx;
 }
 
 /* 日历 */

@@ -1,4 +1,4 @@
-const { callCloud } = require('../../utils/cloud')
+const { callCloud, callCloudCacheFirst, callCloudCached } = require('../../utils/cloud')
 const { getGreeting, formatRelativeDate, formatDate, toFixed } = require('../../utils/util')
 const auth = require('../../utils/auth')
 const app = getApp()
@@ -87,6 +87,38 @@ Page({
     calendarLoading: true,
     recentLoading: true,
     statusBarHeight: 0,
+    // 月份选择
+    currentYear: 0,
+    currentMonth: 0,
+    // 日历懒加载
+    calendarVisible: false,
+    calendarRendered: false,
+  },
+
+  onLoad() {
+    const now = new Date()
+    this.setData({
+      statusBarHeight: wx.getSystemInfoSync().statusBarHeight,
+      currentYear: now.getFullYear(),
+      currentMonth: now.getMonth() + 1,
+    })
+  },
+
+  onReady() {
+    // 设置 IntersectionObserver 监听日历触发区，下滑到时才渲染日历
+    this._calendarObserver = wx.createIntersectionObserver(this)
+    this._calendarObserver.relativeToViewport({ bottom: 100 }).observe('.calendar-trigger', (res) => {
+      if (res.intersectionRatio > 0 && !this.data.calendarRendered) {
+        this.setData({ calendarVisible: true, calendarRendered: true })
+        this._calendarObserver.disconnect()
+      }
+    })
+  },
+
+  onUnload() {
+    if (this._calendarObserver) {
+      this._calendarObserver.disconnect()
+    }
   },
 
   onShow() {
@@ -96,22 +128,43 @@ Page({
     this.loadData()
   },
 
-  onLoad() {
-    const sysInfo = wx.getSystemInfoSync()
-    this.setData({ statusBarHeight: sysInfo.statusBarHeight })
+  // 上个月
+  onPrevMonth() {
+    let m = this.data.currentMonth - 1
+    let y = this.data.currentYear
+    if (m < 1) { m = 12; y-- }
+    // 不允许查看未来月份
+    const now = new Date()
+    if (y > now.getFullYear() || (y === now.getFullYear() && m > now.getMonth() + 1)) {
+      wx.showToast({ title: '不能查看未来月份', icon: 'none' })
+      return
+    }
+    this.setData({ currentYear: y, currentMonth: m })
+    this.loadData()
+  },
+
+  // 下个月
+  onNextMonth() {
+    let m = this.data.currentMonth + 1
+    let y = this.data.currentYear
+    if (m > 12) { m = 1; y++ }
+    // 不允许查看未来月份
+    const now = new Date()
+    if (y > now.getFullYear() || (y === now.getFullYear() && m > now.getMonth() + 1)) {
+      wx.showToast({ title: '不能查看未来月份', icon: 'none' })
+      return
+    }
+    this.setData({ currentYear: y, currentMonth: m })
+    this.loadData()
   },
 
   async loadData() {
     this.setData({
       loading: true,
       greeting: getGreeting(),
-      headerLoading: true,
-      overviewLoading: true,
-      calendarLoading: true,
-      recentLoading: true,
     })
 
-    // auth 已登录则跳过
+    // auth
     if (!auth.isLoggedIn()) {
       try { await auth.initOpenId() } catch (e) { /* ignore */ }
     }
@@ -132,11 +185,11 @@ Page({
       this.setData({ nickName: userInfo.nickName })
     }
 
-    // 第一阶段：获取车辆列表（后续请求依赖 vehicleId）
+    // 第一阶段：获取车辆列表
     let vehicleId = app.getCurrentVehicleId()
     let vehicles = []
     try {
-      vehicles = await callCloud('vehicle', { action: 'list' }) || []
+      vehicles = await callCloudCached('vehicle', { action: 'list' }, 10 * 60 * 1000) || []
     } catch (err) {
       console.error('load vehicles error', err)
     }
@@ -151,63 +204,93 @@ Page({
       headerLoading: false,
     })
 
-    // 第二阶段：并行加载概览、最近记录、日历，各自独立更新
-    const loadOverview = callCloud('stats', { action: 'overview', period: 'month', vehicleId })
-      .then(res => {
-        this.setData({ overview: formatOverview(res), overviewLoading: false })
-      }).catch(err => {
-        console.error('load overview error', err)
-        this.setData({ overviewLoading: false })
-      })
+    // 第二阶段：加载指定月份数据（合并接口，1 次调用）
+    const y = this.data.currentYear
+    const m = this.data.currentMonth
+    this.setData({ overviewLoading: true, calendarLoading: true, recentLoading: true })
 
-    const loadRecent = callCloud('stats', { action: 'recentRecords', limit: 2, vehicleId })
-      .then(recentRes => {
-        const lastRecord = (recentRes && recentRes[0]) || null
-        const lastChargeKwh = lastRecord ? toFixed(lastRecord.chargeKwh, 1) : ''
-        const lastChargeTimeText = lastRecord ? formatRelativeDate(lastRecord.startTime) : ''
-        const records = (recentRes || []).map(r => {
-          r.timeText = formatRelativeDate(r.startTime) + ' ' + formatDate(r.startTime, 'HH:mm') + ' · ' + (r.chargeType === 'fast' ? '快充' : r.chargeType === 'slow' ? '慢充' : '超充')
-          return r
-        })
+    // 对当前月使用 cache-first，非当前月不缓存
+    const now = new Date()
+    const isCurrentMonth = (y === now.getFullYear() && m === now.getMonth() + 1)
+
+    if (isCurrentMonth) {
+      callCloudCacheFirst('stats', {
+        action: 'dashboard', year: y, month: m, vehicleId,
+      }, 2 * 60 * 1000, function (fresh) {
+        this._applyDashboardData(fresh)
+      }.bind(this)).then(function (res) {
+        this._applyDashboardData(res)
+      }.bind(this)).catch(function (err) {
+        console.error('load dashboard error', err)
         this.setData({
-          lastChargeKwh, lastChargeTimeText,
-          recentRecords: records, recentLoading: false,
+          overviewLoading: false, recentLoading: false, calendarLoading: false,
         })
-      }).catch(err => {
-        console.error('load recent error', err)
-        this.setData({ recentLoading: false })
-      })
-
-    const loadCalendar = callCloud('stats', { action: 'calendar', vehicleId })
-      .then(calendarRes => {
+      }.bind(this))
+    } else {
+      // 非当前月不缓存，直接调用
+      callCloud('stats', {
+        action: 'dashboard', year: y, month: m, vehicleId,
+      }).then(function (res) {
+        this._applyDashboardData(res)
+      }.bind(this)).catch(function (err) {
+        console.error('load dashboard error', err)
         this.setData({
-          calendarDays: calendarRes.days || [],
-          calendarKwh: calendarRes.kwh || {},
-          calendarCount: calendarRes.count || 0,
-          calendarTotalKwh: calendarRes.totalKwh || 0,
-          calendarLoading: false,
+          overviewLoading: false, recentLoading: false, calendarLoading: false,
         })
-      }).catch(err => {
-        console.error('load calendar error', err)
-        this.setData({ calendarLoading: false })
-      })
-
-    // 等全部完成再标记整体 loading 结束
-    await Promise.all([loadOverview, loadRecent, loadCalendar])
-    this.setData({ loading: false })
+      }.bind(this))
+    }
   },
 
+  _applyDashboardData: function (data) {
+    if (!data) return
+    var that = this
+
+    if (data.overview) {
+      that.setData({
+        overview: formatOverview(data.overview),
+        overviewLoading: false,
+        loading: false,
+      })
+    }
+
+    if (data.recentRecords) {
+      that._updateRecentRecords(data.recentRecords)
+    }
+
+    if (data.calendar) {
+      that.setData({
+        calendarDays: data.calendar.days || [],
+        calendarKwh: data.calendar.kwh || {},
+        calendarCount: data.calendar.count || 0,
+        calendarTotalKwh: data.calendar.totalKwh || 0,
+        calendarLoading: false,
+      })
+    }
+  },
+
+  _updateRecentRecords: function (recentRes) {
+    var lastRecord = (recentRes && recentRes[0]) || null
+    var lastChargeKwh = lastRecord ? toFixed(lastRecord.chargeKwh, 1) : ''
+    var lastChargeTimeText = lastRecord ? formatRelativeDate(lastRecord.startTime) : ''
+    var records = (recentRes || []).map(function (r) {
+      r.timeText = formatRelativeDate(r.startTime) + ' ' + formatDate(r.startTime, 'HH:mm') + ' · ' + (r.chargeType === 'fast' ? '快充' : r.chargeType === 'slow' ? '慢充' : '超充')
+      return r
+    })
+    this.setData({
+      lastChargeKwh: lastChargeKwh,
+      lastChargeTimeText: lastChargeTimeText,
+      recentRecords: records,
+      recentLoading: false,
+    })
+  },
+
+  // 日历组件内部月份切换时的回调
   onCalendarMonthChange(e) {
     const { year, month } = e.detail
-    const vehicleId = app.getCurrentVehicleId()
-    callCloud('stats', { action: 'calendar', year, month, vehicleId }).then(res => {
-      this.setData({
-        calendarDays: res.days || [],
-        calendarKwh: res.kwh || {},
-        calendarCount: res.count || 0,
-        calendarTotalKwh: res.totalKwh || 0,
-      })
-    })
+    // 更新顶部月份选择器
+    this.setData({ currentYear: year, currentMonth: month })
+    // 重新加载数据（日历组件已有数据，这里重新获取概览和最近记录）
+    this.loadData()
   },
 
   onVehicleCardTap() {
@@ -275,6 +358,14 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.loadData().then(() => wx.stopPullDownRefresh())
+    // 重置回当前月
+    const now = new Date()
+    this.setData({
+      currentYear: now.getFullYear(),
+      currentMonth: now.getMonth() + 1,
+    })
+    this.loadData().then(() => {
+      wx.stopPullDownRefresh()
+    })
   },
 })
