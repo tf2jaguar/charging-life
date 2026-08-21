@@ -3,8 +3,8 @@ const { formatRelativeDate, formatDate, formatDuration, toFixed } = require('../
 const auth = require('../../utils/auth')
 const app = getApp()
 
-const FILTER_MAP = ['all', 'week', 'month', 'fast', 'slow']
-const FILTER_LABELS = ['全部', '本周', '本月', '快充', '慢充']
+const FILTER_MAP = ['month', 'all', 'week', 'fast', 'slow']
+const FILTER_LABELS = ['本月', '全部', '本周', '快充', '慢充']
 
 Page({
   data: {
@@ -95,21 +95,25 @@ Page({
 
   applyFilter(records) {
     const filter = this.data.activeFilter
-    if (filter === 0) return records
-
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-    if (filter === 1) {
+    // 0 = 本月
+    if (filter === 0) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      return records.filter(r => new Date(r.startTime) >= monthStart)
+    }
+    // 1 = 全部
+    if (filter === 1) return records
+    // 2 = 本周
+    if (filter === 2) {
       const weekStart = new Date(today)
       weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
       return records.filter(r => new Date(r.startTime) >= weekStart)
     }
-    if (filter === 2) {
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-      return records.filter(r => new Date(r.startTime) >= monthStart)
-    }
+    // 3 = 快充
     if (filter === 3) return records.filter(r => r.chargeType === 'fast' || r.chargeType === 'super')
+    // 4 = 慢充
     if (filter === 4) return records.filter(r => r.chargeType === 'slow')
     return records
   },

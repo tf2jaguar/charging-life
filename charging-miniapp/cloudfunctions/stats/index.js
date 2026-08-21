@@ -198,30 +198,64 @@ exports.main = async (event, context) => {
       }
 
       case 'trend': {
+        const trePeriod = event.trendPeriod || 'month'
         const now = toBJDate(new Date())
         const yearVal = year || now.getFullYear()
-        const start = new Date(Date.UTC(yearVal, 0, 1) - BJ_OFFSET)
-        const end = new Date(Date.UTC(yearVal + 1, 0, 1) - BJ_OFFSET)
+
+        if (trePeriod === 'year') {
+          // 年度：按月聚合
+          const start = new Date(Date.UTC(yearVal, 0, 1) - BJ_OFFSET)
+          const end = new Date(Date.UTC(yearVal + 1, 0, 1) - BJ_OFFSET)
+
+          const res = await db.collection('records')
+            .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
+            .field({ chargeKwh: true, cost: true, startTime: true })
+            .get()
+
+          const months = Array.from({ length: 12 }, (_, i) => ({
+            month: i + 1,
+            kwh: 0,
+            cost: 0,
+            count: 0,
+          }))
+          res.data.forEach(r => {
+            const m = toBJDate(r.startTime).getMonth()
+            months[m].kwh += r.chargeKwh || 0
+            months[m].cost += r.cost || 0
+            months[m].count++
+          })
+
+          return { code: 0, data: months }
+        }
+
+        // 月度：按天聚合，只返回有充电记录的日期
+        const monthVal = month || (now.getMonth() + 1)
+        const start = new Date(Date.UTC(yearVal, monthVal - 1, 1) - BJ_OFFSET)
+        const end = new Date(Date.UTC(yearVal, monthVal, 1) - BJ_OFFSET)
 
         const res = await db.collection('records')
           .where(addVehicleFilter({ _openid: openid, startTime: _.gte(start).and(_.lt(end)) }))
           .field({ chargeKwh: true, cost: true, startTime: true })
           .get()
 
-        const months = Array.from({ length: 12 }, (_, i) => ({
-          month: i + 1,
+        const daysInMonth = new Date(yearVal, monthVal, 0).getDate()
+        const days = Array.from({ length: daysInMonth }, (_, i) => ({
+          day: i + 1,
           kwh: 0,
           cost: 0,
           count: 0,
         }))
         res.data.forEach(r => {
-          const m = toBJDate(r.startTime).getMonth()
-          months[m].kwh += r.chargeKwh || 0
-          months[m].cost += r.cost || 0
-          months[m].count++
+          const d = toBJDate(r.startTime).getDate()
+          days[d - 1].kwh += r.chargeKwh || 0
+          days[d - 1].cost += r.cost || 0
+          days[d - 1].count++
         })
 
-        return { code: 0, data: months }
+        // 只返回有充电数据的日期
+        const chargedDays = days.filter(d => d.count > 0)
+
+        return { code: 0, data: chargedDays }
       }
 
       case 'timeDistribution': {

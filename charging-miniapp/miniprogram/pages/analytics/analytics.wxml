@@ -38,10 +38,10 @@
     </view>
   </view>
 
-  <!-- 月度趋势 - 加载态 -->
+  <!-- 月度/每日趋势 - 加载态 -->
   <view class="trend-card glass-card" wx:if="{{trendLoading}}">
     <view class="card-header">
-      <text class="card-title">月度充电趋势</text>
+      <text class="card-title">{{period === 'year' ? '月度充电趋势' : '每日充电趋势'}}</text>
     </view>
     <view class="skeleton-bar-chart">
       <view class="skeleton-bar-group" wx:for="{{[1,2,3,4,5,6,7,8,9,10,11,12]}}" wx:key="*this">
@@ -52,10 +52,10 @@
       </view>
     </view>
   </view>
-  <!-- 月度趋势 - 数据态 -->
+  <!-- 月度/每日趋势 - 数据态 -->
   <view class="trend-card glass-card" wx:elif="{{trend.length}}">
     <view class="card-header">
-      <text class="card-title">月度充电趋势</text>
+      <text class="card-title">{{period === 'year' ? '月度充电趋势' : '每日充电趋势'}}</text>
       <view class="legend-row">
         <view class="legend-item">
           <view class="legend-dot" style="background: linear-gradient(135deg, #DD847E, #E8A8A3);"></view>
@@ -73,7 +73,7 @@
           <view class="bar bar-kwh" style="height: {{item.kwh > 0 ? (item.kwh / maxKwh * 100) : 0}}%"></view>
           <view class="bar bar-cost" style="height: {{item.cost > 0 ? (item.cost / maxCost * 100) : 0}}%"></view>
         </view>
-        <text class="bar-label">{{item.month}}月</text>
+        <text class="bar-label">{{item.label}}</text>
       </view>
     </view>
   </view>

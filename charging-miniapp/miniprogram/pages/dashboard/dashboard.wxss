@@ -254,7 +254,7 @@
 
 /* 概览 */
 .overview-section {
-  padding: 32rpx;
+  padding: 16rpx;
 }
 
 .overview-grid {

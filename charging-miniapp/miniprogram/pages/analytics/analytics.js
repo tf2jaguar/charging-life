@@ -69,8 +69,13 @@ Page({
       this.setData({ coreLoading: false })
     }.bind(this))
 
-    callCloudCacheFirst('stats', { action: 'trend', vehicleId }, ttl, function (trend) {
-      var trendData = trend || []
+    callCloudCacheFirst('stats', { action: 'trend', trendPeriod: period, vehicleId }, ttl, function (trend) {
+      var trendData = (trend || []).map(function (item) {
+        if (period === 'year') {
+          return { label: item.month + '月', kwh: item.kwh, cost: item.cost, count: item.count }
+        }
+        return { label: item.day + '日', kwh: item.kwh, cost: item.cost, count: item.count }
+      })
       this.setData({
         trend: trendData,
         maxKwh: Math.max.apply(null, trendData.map(function (m) { return m.kwh }), 1),
@@ -78,7 +83,12 @@ Page({
         trendLoading: false,
       })
     }.bind(this)).then(function (trend) {
-      var trendData = trend || []
+      var trendData = (trend || []).map(function (item) {
+        if (period === 'year') {
+          return { label: item.month + '月', kwh: item.kwh, cost: item.cost, count: item.count }
+        }
+        return { label: item.day + '日', kwh: item.kwh, cost: item.cost, count: item.count }
+      })
       this.setData({
         trend: trendData,
         maxKwh: Math.max.apply(null, trendData.map(function (m) { return m.kwh }), 1),
