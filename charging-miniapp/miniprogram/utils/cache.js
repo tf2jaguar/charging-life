@@ -8,9 +8,16 @@ const MAX_CACHE_KEYS = 30
 
 function getCacheKey(name, data) {
   var action = (data && data.action) || ''
-  // 包含 vehicleId 以区分不同车辆的缓存
   var vid = (data && data.vehicleId) || ''
-  return CACHE_PREFIX + name + '_' + action + '_' + vid
+  // 包含筛选参数以区分不同查询
+  var extra = ''
+  var filter = (data && data.filter) || ''
+  var period = (data && data.period) || ''
+  var trendPeriod = (data && data.trendPeriod) || ''
+  if (filter) extra += '_' + filter
+  if (period) extra += '_' + period
+  if (trendPeriod) extra += '_' + trendPeriod
+  return CACHE_PREFIX + name + '_' + action + '_' + vid + extra
 }
 
 function getCached(key) {

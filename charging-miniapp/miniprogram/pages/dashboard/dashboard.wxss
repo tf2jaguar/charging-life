@@ -216,7 +216,6 @@
   align-items: center;
   justify-content: center;
   gap: 40rpx;
-  padding: 0 0 24rpx;
 }
 
 .month-nav-btn {
